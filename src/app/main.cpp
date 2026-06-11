@@ -17,17 +17,12 @@ You should have received a copy of the GNU General Public License along with
 Toluene. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#include <RtAudio.h>
+#include <audiobackend.h>
 #include <ncurses.h>
 
 using namespace std;
 
 int main(int argc, char *argv[]){
-    initscr();
-    cbreak();
-    keypad(stdscr, TRUE);
-    getch();
-    endwin();
     
     return 0;
 }

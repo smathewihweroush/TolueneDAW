@@ -1,0 +1,19 @@
+File for TODO-ing stuff. TODO's are also put in files which contain something TODO, but
+this is a more centralized TODO list.
+Amount of exclamation marks is the priority. Pretty arbitrary but keep 3 !'s as top-priority, and 0 as very low.
+
+smathewih, learn cpp headers and sources, and cmake, godammit
+cxx stands for c cant classes :sob: :wilted_rose: :im_going_insane_already:
+
+General
+- ! add logging utility
+- ! add file handling utility
+- somehow fix cmake stuff (actually learn good, modern cmake)
+- add cross-platform compatability DIFFICULT
+
+Audio backend
+- !!! make a constructor for the AudioBackend class???
+- !! make abstract audiostreamconnection class for linking 
+- !! add full compatability with all options in RtAudio
+- ! add error handling functionality (logging)
+- ! add returns signifying success in void functions

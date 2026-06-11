@@ -41,3 +41,4 @@ target_sources(Toluene
 
 target_link_libraries(Toluene PRIVATE rtaudio)
 target_link_libraries(Toluene PRIVATE Curses)
+target_link_libraries(Toluene PRIVATE AudioBackend)
