@@ -18,11 +18,36 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <audiobackend.h>
+#include <memory>
+#include <rtaudiobackend.h>
 #include <ncurses.h>
+#include <string>
+#include <unistd.h>
 
 using namespace std;
+using namespace Toluene;
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
+    // choose api
+    vector<Toluene::Api> apsi = RtAudioBackend::getAvailableApis();
+    cout << "Choose the id of which Api to use for audio playback. Options are:\n";
+    for (int i = 0; i < apsi.size(); i++) {
+        cout << "Id " << apsi[i] << ": " << RtAudioBackend::getApiName(apsi[i]) << '\n';
+    }
+    Toluene::Api chosenApi;
+    cin >> (int&)chosenApi;
+    cout << '\n';
+    // set up
+    unique_ptr<AudioBackend> bcknd = make_unique<RtAudioBackend>(chosenApi);
+    cout << "Created Backend.\n";
+    bcknd->startApi();
+    cout << "Using Api. Available devices:\n";
+    sleep(1); // i know this isnt cross platform, but im gonna deal with it later
+    bcknd->getAudioDevices();
+    
+    cout <<"Enter something to end: ";
+    string nthn;
+    cin >> nthn;
     
     return 0;
 }

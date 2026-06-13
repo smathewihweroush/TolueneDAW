@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Api AudioBackend::getApi() { // get current api
+/*Api AudioBackend::getApi() { // get current api
         return currentApi;
     }
 void AudioBackend::setApi(Api newApi) { // try to change api
@@ -24,4 +24,12 @@ AudioStream AudioBackend::openStream(
 };
 void AudioBackend::closeStream(AudioStream* stream) {
     activeStreams.erase(stream);
+}
+*/
+
+// wanted to make AudioBackend abstract. :D
+// now everything is in comments
+
+Toluene::AudioBackend::AudioBackend(Api api) {
+    currentApi = api; // i seriously have no idea what the point of this is
 }
