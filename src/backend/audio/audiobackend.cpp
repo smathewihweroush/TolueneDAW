@@ -30,6 +30,10 @@ void AudioBackend::closeStream(AudioStream* stream) {
 // wanted to make AudioBackend abstract. :D
 // now everything is in comments
 
+Toluene::AudioDevice::AudioDevice(AudioBackend* bcknd) {
+    owner = bcknd;
+};
+
 Toluene::AudioBackend::AudioBackend(Api api) {
     currentApi = api; // i seriously have no idea what the point of this is
 }

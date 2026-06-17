@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <set>
 #include <RtAudio.h>
 
 // TODO: add error handling functionality
@@ -29,14 +28,13 @@ namespace Toluene {
         DUMMY
     };
 
-    enum SampleType {
-        SINT8 = 1,
-        SINT16 = 2,
-        SINT24 = 4,
-        SINT32 = 8,
-        FLOAT32 = 16,
-        FLOAT64 = 32
-    };
+    typedef int SampleType;
+    const SampleType SINT8 = 1;
+    const SampleType SINT16 = 2;
+    const SampleType SINT24 = 4;
+    const SampleType SINT32 = 8;
+    const SampleType FLOAT32 = 16;
+    const SampleType FLOAT64 = 32;
 
     enum AudioStreamOptionFlags {
         NONINTERLEAVED = 1,
@@ -56,41 +54,45 @@ namespace Toluene {
 
     class AudioBackend;
     class AudioDevice { // frankly this only considers rtaudio as a backend but idc that much :///
-    private: // ... a bit strange. private before public, but okay.
+        private: // ... a bit strange. private before public, but okay.
         AudioBackend* owner;
-    public:
+        public:
         std::string deviceName;
         unsigned int deviceId;
         unsigned int outputChannels;
         unsigned int inputChannels;
         unsigned int duplexChannels;
-        bool isDefaultOut;
         bool isDefaultIn;
+        bool isDefaultOut;
         std::vector<unsigned int> supportedSampleRates;
         unsigned int currentSampleRate;
         unsigned int preferredSampleRate;
         SampleType supportedSampleTypes; // bitmask, just like in rtaudio
         unsigned int id; // id means nothing, just used to differentiate in the code.
+        AudioDevice(AudioBackend*);
     };
 
     struct AudioStreamParameters {
-    public:
+        public:
         unsigned int deviceId;
         unsigned int channelNumber;
         unsigned int channelOffset;
     };
 
     struct AudioStreamOptions {
-    public:
+        public:
         AudioStreamOptionFlags flags;
         unsigned int numberOfBuffers;
         std::string streamName;
         int priority;
     };
 
+    typedef unsigned int AudioStreamId;
+    
     class AudioStream {
-    public:
-        bool open;
+        public:
+        AudioStreamId id;
+        bool started;
         AudioStreamParameters* outparams;
         AudioStreamParameters* inparams;
         SampleType format;
@@ -99,12 +101,17 @@ namespace Toluene {
         void* callback;
         void* args;
         AudioStreamOptions options;
-        AudioStream(AudioStreamParameters* outparams, AudioStreamParameters* inparams, SampleType format,
+        AudioStream(AudioBackend* backend, 
+            AudioStreamParameters* outparams, AudioStreamParameters* inparams, SampleType format,
             unsigned int sampleRate, unsigned int* bufferSize, void* callback, void* args, AudioStreamOptions options) : 
             outparams(outparams), inparams(inparams), sampleRate(sampleRate), bufferSize(bufferSize),
-            callback(callback), args(args),
-            options(options) {}
-        AudioStream() {};
+            callback(callback), args(args), options(options), backend(backend) {}
+        AudioStream(AudioBackend* backend) : 
+            backend(backend) {}
+        void startStream();
+        void stopStream();
+        private:
+        AudioBackend* backend;
     };
 
     // TODO: make abstract audiostreamconnection class for linking 
@@ -114,7 +121,7 @@ namespace Toluene {
     // should host all necessary stuff toluene requires + utilities 
     // e. g. AudioBackend for RtAudio
     class AudioBackend {
-    public:
+        public:
         // handling of api
         virtual void startApi() = 0; // start the backend communication with audio api
         static std::vector<Api> getAvailableApis(); // get api's which the backend supports
@@ -124,11 +131,11 @@ namespace Toluene {
         // handling of devices
         virtual std::vector<AudioDevice*> getAudioDevices() = 0; // get a vector of all audio devices
         virtual std::vector<unsigned int> getAudioDeviceIds() = 0; // get a vector of all audio device ids
-        virtual std::vector<unsigned int> getAudioDeviceNames() = 0; // get a vector of all audio device names
+        virtual std::vector<std::string> getAudioDeviceNames() = 0; // get a vector of all audio device names
         virtual AudioDevice* getDefaultOutputDevice() = 0; // get the def out device for the system
         virtual AudioDevice* getDefaultInputDevice() = 0; // get the def out device for the system
         // handling of streams
-        virtual AudioStream openStream( // essentially creates a start-able stream, ready to be used
+        virtual AudioStreamId openStream( // essentially creates a start-able stream, ready to be used
             AudioStreamParameters*, // buffer options for outgoing stream
             AudioStreamParameters*, // buffer options for incoming stream
             SampleType, // the type individual samples are
@@ -138,15 +145,16 @@ namespace Toluene {
             void*, // user defined data
             AudioStreamOptions // special options for the stream
         ) = 0;
-        virtual void closeStream(AudioStream*) = 0; // delete and remove stream "safely"
+        virtual void closeStream(AudioStreamId) = 0; // delete and remove stream "safely"
         // handling of class stuff
         AudioBackend(Api);
         virtual ~AudioBackend() = default;
 
         Api currentApi;
         bool startedApi;
-    private:
-        std::set<AudioStream*> activeStreams; // unsure if i should use sets here really...
+        protected:
+        std::vector<std::unique_ptr<AudioStream>> activeStreams; // unsure if i should use a vector here really...
+        std::vector<AudioDevice> devices;
         // TODO: see if unique_ptr/shared_ptr may be better instead of pointers
     };
 }

@@ -42,8 +42,10 @@ int main(int argc, char *argv[]) {
     cout << "Created Backend.\n";
     bcknd->startApi();
     cout << "Using Api. Available devices:\n";
-    sleep(1); // i know this isnt cross platform, but im gonna deal with it later
-    bcknd->getAudioDevices();
+    for (int i = 0; i < 20; i++) {
+        sleep(1); // i know this isnt cross platform, but im gonna deal with it later
+        bcknd->getAudioDevices();
+    }
     
     cout <<"Enter something to end: ";
     string nthn;

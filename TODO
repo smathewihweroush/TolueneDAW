@@ -13,12 +13,16 @@ General
 - add cross-platform compatability DIFFICULT
 
 Audio backend
-- !! make abstract audiostreamconnection class for linking 
-- !! add full compatability with all options in RtAudio
-- ! add error handling functionality (logging)
+- ! add error handling functionality (with logging utility)
 - ! add returns signifying success in void functions
 - see if unique_ptr/shared_ptr may be better instead of pure pointers
 - AudioBackend is structured kinda weird. how to make it better?
 
 RtAudio backend
+- !!! add all casts
+- !! add full compatability with all options in RtAudio
 - ! secure RtAudio instance construction
+- ! there has to be some better way to copy data from rtaudio and toluene 
+    audio devices without just... manually setting and getting every element.
+- ! do we really have to getAudioDevices() for every audio device related action?
+    getAudioDevices() isn't particularly fast...
