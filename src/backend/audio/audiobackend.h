@@ -28,25 +28,35 @@ namespace Toluene {
         DUMMY
     };
 
-    typedef int SampleType;
-    const SampleType SINT8 = 1;
-    const SampleType SINT16 = 2;
-    const SampleType SINT24 = 4;
-    const SampleType SINT32 = 8;
-    const SampleType FLOAT32 = 16;
-    const SampleType FLOAT64 = 32;
+    // stupid wrapped typedef structs
 
-    enum AudioStreamOptionFlags {
-        NONINTERLEAVED = 1,
-        MINIMIZE_LATENCY = 2,
-        HOG_DEVICE = 4,
-        REALTIME_SCHEDULING = 8,
-        ALSA_USE_DEFAULT = 16
+    typedef int SampleTypeDef;
+    const SampleTypeDef SINT8 = 1;
+    const SampleTypeDef SINT16 = 2;
+    const SampleTypeDef SINT24 = 4;
+    const SampleTypeDef SINT32 = 8;
+    const SampleTypeDef FLOAT32 = 16;
+    const SampleTypeDef FLOAT64 = 32;
+    struct SampleType {
+        SampleTypeDef types;
+    }; // why the hell do i have to wrap this
+
+    typedef unsigned int AudioStreamOptionFlagsDef;
+    const AudioStreamOptionFlagsDef NONINTERLEAVED = 1;
+    const AudioStreamOptionFlagsDef MINIMIZE_LATENCY = 2;
+    const AudioStreamOptionFlagsDef HOG_DEVICE = 4;
+    const AudioStreamOptionFlagsDef REALTIME_SCHEDULING = 8;
+    const AudioStreamOptionFlagsDef ALSA_USE_DEFAULT = 16;
+    struct AudioStreamOptionFlags {
+        AudioStreamOptionFlagsDef flags;
     };
 
-    enum AudioStreamStatus {
-        INPUT_OVERFLOW = 1,
-        OUTPUT_UNDERFLOW = 2
+    typedef unsigned int AudioStreamStatusDef;
+    const AudioStreamStatusDef OK = 0;
+    const AudioStreamStatusDef INPUT_OVERFLOW = 1;
+    const AudioStreamStatusDef OUTPUT_UNDERFLOW = 2;
+    struct AudioStreamStatus {
+        AudioStreamStatusDef status;
     };
 
     typedef int (*AudioCallback)(void *outBuffer, void *inputBuffer, 

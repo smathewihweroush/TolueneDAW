@@ -11,19 +11,24 @@ template<typename T>
 struct RtAudioMap;
 
 template<>
-struct RtAudioMap<Toluene::Api> {
+struct RtAudioMap<Toluene::Api> { // for converting api types
     static RtAudio::Api to(Toluene::Api);
     static Toluene::Api from(RtAudio::Api);
 };
 template<>
-struct RtAudioMap<Toluene::AudioStreamParameters> {
+struct RtAudioMap<Toluene::AudioStreamParameters> { // for converting stream paramaters structs
     static RtAudio::StreamParameters to(Toluene::AudioStreamParameters);
     static Toluene::AudioStreamParameters from(RtAudio::StreamParameters);
 };
 template<>
-struct RtAudioMap<Toluene::AudioStreamStatus> {
+struct RtAudioMap<Toluene::AudioStreamStatus> { // for converting stream status typedefs
     static RtAudioStreamStatus to(Toluene::AudioStreamStatus);
     static Toluene::AudioStreamStatus from(RtAudioStreamStatus);
+};
+template<>
+struct RtAudioMap<Toluene::AudioStreamOptionFlags> {
+    static RtAudioStreamFlags to(Toluene::AudioStreamOptionFlags);
+    static Toluene::AudioStreamOptionFlags from(RtAudioStreamFlags);
 };
 template<>
 struct RtAudioMap<Toluene::AudioStreamOptions> {
