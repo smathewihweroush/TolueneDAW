@@ -35,9 +35,14 @@ struct RtAudioMap<Toluene::AudioStreamOptions> {
     static RtAudio::StreamOptions to(Toluene::AudioStreamOptions);
     static Toluene::AudioStreamOptions from(RtAudio::StreamOptions);
 };
+template<>
+struct RtAudioMap<Toluene::SampleType> {
+    static RtAudioFormat to(Toluene::SampleType);
+    static Toluene::SampleType from(RtAudioFormat);
+};
 
 struct RtCallbackData {
-    Toluene::AudioCallback callback;
+    Toluene::AudioCallback* callback;
     void* userData;
 };
 

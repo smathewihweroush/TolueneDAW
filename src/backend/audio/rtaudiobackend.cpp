@@ -1,7 +1,9 @@
 #include <audiobackend.h>
+#include <compare>
 #include <iostream>
 #include <memory>
 #include <rtaudiobackend.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -79,6 +81,14 @@ Toluene::AudioStreamOptions RtAudioMap<Toluene::AudioStreamOptions>::from(RtAudi
         streamOptions.numberOfBuffers, streamOptions.streamName, 
         streamOptions.priority};
     return strops;
+}
+
+RtAudioFormat RtAudioMap<Toluene::SampleType>::to(Toluene::SampleType sampleType) {
+    return sampleType.types;
+}
+
+Toluene::SampleType RtAudioMap<Toluene::SampleType>::from(RtAudioFormat format) {
+    return {static_cast<Toluene::SampleTypeDef>(format)};
 }
 
 // utilities
@@ -250,8 +260,8 @@ Toluene::AudioDevice* RtAudioBackend::getDefaultInputDevice() { // all of these 
 // handling of streams
 int trampoline(void *outputBuffer, void *inputBuffer, unsigned int nFrames, 
     double streamTime, RtAudioStreamStatus status, void *userData) {
-    auto* data = static_cast<RtCallbackData*>(userData);
-    return data->callback(
+    auto data = static_cast<RtCallbackData*>(userData);
+    return (*data->callback)( // TODO: is this okay?
         outputBuffer, inputBuffer, nFrames, streamTime, RtAudioMap<Toluene::AudioStreamStatus>::from(status), data->userData
     );
 } // used in the below function, rtaudiocallback which sets up a call to actual toluene::audiocallback
@@ -267,16 +277,38 @@ Toluene::AudioStreamId RtAudioBackend::openStream(
     if (activeStream) {
         std::cerr << "Already has an open stream. RtAudio supports only one concurrent stream. Closing current stream.\n";
     }
-    activeStream = 1;
+    RtCallbackData data; // TODO: .. i think none of these persist after this function call.
+    data.callback = callback;
+    data.userData = args;
     RtAudio::StreamParameters outpms = RtAudioMap<Toluene::AudioStreamParameters>::to(*outparams);
     RtAudio::StreamParameters inpms = RtAudioMap<Toluene::AudioStreamParameters>::to(*inparams);
     RtAudio::StreamOptions strops = RtAudioMap<Toluene::AudioStreamOptions>::to(options);
-    engine->openStream(&outpms, &inpms, type.types, sampleRate, bufferSize, 
-        &trampoline, args, &strops);
+    engine->openStream(&outpms, &inpms, 
+        RtAudioMap<Toluene::SampleType>::to(type), sampleRate, bufferSize, 
+        &trampoline, &data, &strops);
+        if (!engine->isStreamOpen()) {
+            std::cerr << "Error: Could not open RtAudio stream.\n";
+            return 0;
+        }
+    activeStream = 1; // we can no say we did it!
     rtStream = std::make_unique<Toluene::AudioStream>(this, outparams, inparams, type, 
         sampleRate, bufferSize, callback, args, options);
     return 1;
 };
+
+void RtAudioBackend::closeStream(Toluene::AudioStreamId id) {
+    if (!activeStream) {
+        std::cerr << "No streams are open.\n";
+        return;
+    }
+    // TODO: also stop if playing
+    engine->closeStream();
+    if (engine->isStreamOpen()) {
+        std::cerr << "Error: Could not close RtAudio stream. Somehow.\n";
+        return;
+    }
+    activeStream = 0;
+}
 
 RtAudioBackend::RtAudioBackend(Toluene::Api api) : Toluene::AudioBackend(api) {
     currentApi = api;

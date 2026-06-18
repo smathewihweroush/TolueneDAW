@@ -30,7 +30,7 @@ namespace Toluene {
 
     // stupid wrapped typedef structs
 
-    typedef int SampleTypeDef;
+    typedef unsigned int SampleTypeDef;
     const SampleTypeDef SINT8 = 1;
     const SampleTypeDef SINT16 = 2;
     const SampleTypeDef SINT24 = 4;

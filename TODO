@@ -21,6 +21,8 @@ Audio backend
 - AudioBackend is structured kinda weird. how to make it better?
 
 RtAudio backend
+- !!! everything created in openStream() doesn't persist, i think.
+- !! also stop audio stream if playing when closing 
 - !! add full compatability with all options in RtAudio
 - ! wrapping the typedefs in a struct to be able to use in the template for the rtaudiomap is so stupid.
 - ! secure RtAudio instance construction

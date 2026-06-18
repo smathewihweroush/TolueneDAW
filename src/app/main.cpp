@@ -39,13 +39,8 @@ int main(int argc, char *argv[]) {
     cout << '\n';
     // set up
     unique_ptr<AudioBackend> bcknd = make_unique<RtAudioBackend>(chosenApi);
-    cout << "Created Backend.\n";
     bcknd->startApi();
-    cout << "Using Api. Available devices:\n";
-    for (int i = 0; i < 20; i++) {
-        sleep(1); // i know this isnt cross platform, but im gonna deal with it later
-        bcknd->getAudioDevices();
-    }
+    cout << "Created Backend.\n";
     
     cout <<"Enter something to end: ";
     string nthn;
