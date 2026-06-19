@@ -1,3 +1,23 @@
+/*
+Toluene: digital audio workspace with a text user interface
+Copyright 2026 smathewih
+
+This file is part of Toluene.
+
+Toluene is free software: you can redistribute it and/or modify it under 
+the terms of the GNU General Public License as published by the Free 
+Software Foundation, either version 3 of the License, or (at your option) 
+any later version.
+
+Toluene is distributed in the hope that it will be useful, but WITHOUT ANY 
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with 
+Toluene. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
+
 #pragma once
 
 #include <audiobackend.h>
@@ -42,7 +62,7 @@ struct RtAudioMap<Toluene::SampleType> {
 };
 
 struct RtCallbackData {
-    Toluene::AudioCallback* callback;
+    Toluene::AudioCallback callback;
     void* userData;
 };
 
@@ -67,11 +87,15 @@ class RtAudioBackend : public Toluene::AudioBackend {
         Toluene::SampleType,
         unsigned int,
         unsigned int*,
-        Toluene::AudioCallback*,
+        Toluene::AudioCallback,
         void*,
         Toluene::AudioStreamOptions
     ) override; // this will always return 1 as the id, because there can only be one audiostream for rtaudio
     void closeStream(Toluene::AudioStreamId) override;
+    Toluene::AudioStream& getStream(Toluene::AudioStreamId) override; // i dont recommend using this, but use this if you need to get an audiostream object
+    bool isStreamPlaying(Toluene::AudioStreamId) override; // is stream playback active (has startedStream())?
+    void startStream(Toluene::AudioStreamId) override;
+    void stopStream(Toluene::AudioStreamId) override;
     // handling of class stuff
     RtAudioBackend(Toluene::Api);
     ~RtAudioBackend() override;

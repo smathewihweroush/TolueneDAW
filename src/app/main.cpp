@@ -18,14 +18,30 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <audiobackend.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <rtaudiobackend.h>
 #include <ncurses.h>
-#include <string>
 #include <unistd.h>
 
 using namespace std;
 using namespace Toluene;
+
+int some = 512;
+int sound(void *out, void *in, unsigned int nFrames, double time, AudioStreamStatus stat, void* usrd) {
+    unsigned int i, j;
+    // we dont do any status checking, but thats surely aaaaaalright!!!
+    int16_t *buf = (int16_t*) out;
+    for (i = 0; i < nFrames; i++) {
+        for (j = 0; j < 2; j++) {
+            *buf = (i % some) * 20;
+            ++buf;
+        }
+    }
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
     // choose api
@@ -41,10 +57,18 @@ int main(int argc, char *argv[]) {
     unique_ptr<AudioBackend> bcknd = make_unique<RtAudioBackend>(chosenApi);
     bcknd->startApi();
     cout << "Created Backend.\n";
+    cout << "Let's try to make audio output! I'll try to use your default audio output device. \n";
+    AudioStreamParameters out{bcknd->getDefaultOutputDevice()->deviceId, 2, 0};
+    unsigned int bufferframes = 512;
+    AudioStreamId id = bcknd->openStream(&out, NULL, {Toluene::SINT16}, 44100, &bufferframes, &sound);
+    // we can hear sound...
+    bcknd->startStream(id); // now!!!
+    while (true) {
+        // to exit this loop, just ctrl+c keyboard interrupt
+        cout <<"Enter some positive integer: ";
+        cin >> some;
+    }
+    bcknd->closeStream(id); // automatically also stops the stream!
     
-    cout <<"Enter something to end: ";
-    string nthn;
-    cin >> nthn;
-    
-    return 0;
+    return EXIT_SUCCESS;
 }

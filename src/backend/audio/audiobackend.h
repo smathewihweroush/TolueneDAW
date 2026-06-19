@@ -1,3 +1,22 @@
+/*
+Toluene: digital audio workspace with a text user interface
+Copyright 2026 smathewih
+
+This file is part of Toluene.
+
+Toluene is free software: you can redistribute it and/or modify it under 
+the terms of the GNU General Public License as published by the Free 
+Software Foundation, either version 3 of the License, or (at your option) 
+any later version.
+
+Toluene is distributed in the hope that it will be useful, but WITHOUT ANY 
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with 
+Toluene. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 #pragma once
 
 #include <string>
@@ -124,9 +143,6 @@ namespace Toluene {
         AudioBackend* backend;
     };
 
-    // TODO: make abstract audiostreamconnection class for linking 
-    // audiostream objects to actual library dependent audiostreams
-
     // class for backends which handle communication with api's on their own
     // should host all necessary stuff toluene requires + utilities 
     // e. g. AudioBackend for RtAudio
@@ -151,11 +167,16 @@ namespace Toluene {
             SampleType, // the type individual samples are
             unsigned int, // the sample rate of the stream
             unsigned int*, // wanted buffer size of the stream. may change, so thats why its a pointer.
-            AudioCallback*, // the callback which updates the stream
-            void*, // user defined data
-            AudioStreamOptions // special options for the stream
+            AudioCallback, // the callback which updates the stream
+            void* = NULL, // user defined data
+            AudioStreamOptions = {} // special options for the stream
+                                    // TODO: what should be here for the default?
         ) = 0;
         virtual void closeStream(AudioStreamId) = 0; // delete and remove stream "safely"
+        virtual AudioStream& getStream(AudioStreamId) = 0; // i dont recommend using this, but use this if you need to get an audiostream object
+        virtual bool isStreamPlaying(AudioStreamId) = 0; // is stream playback active (has startedStream())?
+        virtual void startStream(AudioStreamId) = 0; // start stream playback
+        virtual void stopStream(AudioStreamId) = 0; // start stream playback
         // handling of class stuff
         AudioBackend(Api);
         virtual ~AudioBackend() = default;

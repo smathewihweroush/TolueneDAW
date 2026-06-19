@@ -15,14 +15,16 @@ General
 - one day, somebody shall make this look less like a joke
 
 Audio backend
+- ! is it okay if the default value for the AudioStreamOptions in openStream() is just {}?
 - ! add error handling functionality (with logging utility)
-- ! add returns signifying success in void functions
 - see if unique_ptr/shared_ptr may be better instead of pure pointers
 - AudioBackend is structured kinda weird. how to make it better?
 
 RtAudio backend
-- !!! everything created in openStream() doesn't persist, i think.
-- !! also stop audio stream if playing when closing 
+- !!! getAudioDevices return statement is a stub. did you write anything?
+- !!! should all variables used in openStream() really be on the heap? and independent of RtAudioBackend? individual?
+- !! does getStream() actually work?
+- !! must check if api was started in a lot of the current functions.
 - !! add full compatability with all options in RtAudio
 - ! wrapping the typedefs in a struct to be able to use in the template for the rtaudiomap is so stupid.
 - ! secure RtAudio instance construction

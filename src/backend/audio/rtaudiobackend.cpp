@@ -1,9 +1,29 @@
+/*
+Toluene: digital audio workspace with a text user interface
+Copyright 2026 smathewih
+
+This file is part of Toluene.
+
+Toluene is free software: you can redistribute it and/or modify it under 
+the terms of the GNU General Public License as published by the Free 
+Software Foundation, either version 3 of the License, or (at your option) 
+any later version.
+
+Toluene is distributed in the hope that it will be useful, but WITHOUT ANY 
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with 
+Toluene. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
+
 #include <audiobackend.h>
-#include <compare>
+#include <cstddef>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <rtaudiobackend.h>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -101,12 +121,14 @@ bool RtAudioBackend::mustStartedApi() {
     return false;
 }
 
+// api related
+
 void RtAudioBackend::startApi() {
     if (startedApi) {
         std::cerr << "RtAudio instance with Api already created.\n";
         return;
     }
-    engine = std::make_unique<RtAudio>(RtAudio(RtAudioMap<Toluene::Api>::to(currentApi))); // TODO: no error callback!!! 333:
+    engine = std::make_unique<RtAudio>(RtAudioMap<Toluene::Api>::to(currentApi)); // TODO: no error callback!!! 333:
     // TODO: not just hope it initialized right 
     startedApi = true;
 }
@@ -152,7 +174,10 @@ void RtAudioBackend::setApi(Toluene::Api api) {
     currentApi = api;
 };
 
+// audio device related
+
 bool testAudioDevicesData(RtAudio::DeviceInfo& rtDevice, Toluene::AudioDevice& tolueneDevice) {
+    // utility to either check if two devices are same, or to equal them out
     if (rtDevice.isDefaultInput == tolueneDevice.isDefaultIn &&
         rtDevice.isDefaultOutput == tolueneDevice.isDefaultOut &&
         rtDevice.inputChannels == tolueneDevice.inputChannels &&
@@ -185,9 +210,9 @@ std::vector<Toluene::AudioDevice*> RtAudioBackend::getAudioDevices() { // this m
         RtAudio::DeviceInfo info = engine->getDeviceInfo(ids[i]);
         Toluene::AudioDevice* match = nullptr;
         for (int j = 0; j < devices.size(); j++) {
-            if (devices[i].id == info.ID) {
-                match = &devices[i];
-                checked[i] = 1;
+            if (devices[j].id == info.ID) {
+                match = &devices[j];
+                checked[j] = 1;
                 break;
             }
         }
@@ -207,6 +232,7 @@ std::vector<Toluene::AudioDevice*> RtAudioBackend::getAudioDevices() { // this m
             newDevice.preferredSampleRate = info.preferredSampleRate;
             newDevice.supportedSampleTypes.types = info.nativeFormats;
             // there has to be some better way to do this.
+            devices.push_back(newDevice);
         }
     }
     for (int i = prevsiz - 1; i >= 0; i--) {
@@ -214,7 +240,7 @@ std::vector<Toluene::AudioDevice*> RtAudioBackend::getAudioDevices() { // this m
             devices.erase(std::next(devices.begin(), i));
         }
     }
-    return std::vector<Toluene::AudioDevice*>(); // TODO: this sucks frankly
+    return std::vector<Toluene::AudioDevice*>(); // TODO: this sucks frankly AND STUB
 };
 
 std::vector<unsigned int> RtAudioBackend::getAudioDeviceIds() {
@@ -240,9 +266,12 @@ std::vector<std::string> RtAudioBackend::getAudioDeviceNames() {
 Toluene::AudioDevice* RtAudioBackend::getDefaultOutputDevice() { 
     if (mustStartedApi()) return nullptr;
     getAudioDevices();
-    Toluene::AudioDevice* found;
+    Toluene::AudioDevice* found = NULL;
     for (int i = 0; i < devices.size(); i++) {
         if (devices[i].isDefaultOut) found = &devices[i];
+    }
+    if (found == NULL) {
+        std::cerr << "Error: Didn't find any default output device.\n";
     }
     return found;
 };
@@ -254,36 +283,55 @@ Toluene::AudioDevice* RtAudioBackend::getDefaultInputDevice() { // all of these 
     for (int i = 0; i < devices.size(); i++) {
         if (devices[i].isDefaultIn) found = &devices[i];
     }
+    if (found == NULL) {
+        std::cerr << "Error: Didn't find any default input device.\n";
+    }
     return found;
 };
 
 // handling of streams
+
 int trampoline(void *outputBuffer, void *inputBuffer, unsigned int nFrames, 
     double streamTime, RtAudioStreamStatus status, void *userData) {
     auto data = static_cast<RtCallbackData*>(userData);
-    return (*data->callback)( // TODO: is this okay?
-        outputBuffer, inputBuffer, nFrames, streamTime, RtAudioMap<Toluene::AudioStreamStatus>::from(status), data->userData
+    return data->callback( // TODO: is this okay?
+        outputBuffer, inputBuffer, nFrames, streamTime, 
+        RtAudioMap<Toluene::AudioStreamStatus>::from(status), data->userData
     );
 } // used in the below function, rtaudiocallback which sets up a call to actual toluene::audiocallback
+
+RtCallbackData data; // TODO: these variables are a heap mess. change this!!!
+RtAudio::StreamParameters* outpms;
+RtAudio::StreamParameters* inpms;
+RtAudio::StreamParameters oup;
+RtAudio::StreamParameters inp;
+RtAudio::StreamOptions strops;
 Toluene::AudioStreamId RtAudioBackend::openStream(
     Toluene::AudioStreamParameters* outparams,
     Toluene::AudioStreamParameters* inparams,
     Toluene::SampleType type,
     unsigned int sampleRate,
     unsigned int* bufferSize,
-    Toluene::AudioCallback* callback,
+    Toluene::AudioCallback callback,
     void* args,
     Toluene::AudioStreamOptions options) {
     if (activeStream) {
         std::cerr << "Already has an open stream. RtAudio supports only one concurrent stream. Closing current stream.\n";
     }
-    RtCallbackData data; // TODO: .. i think none of these persist after this function call.
     data.callback = callback;
     data.userData = args;
-    RtAudio::StreamParameters outpms = RtAudioMap<Toluene::AudioStreamParameters>::to(*outparams);
-    RtAudio::StreamParameters inpms = RtAudioMap<Toluene::AudioStreamParameters>::to(*inparams);
-    RtAudio::StreamOptions strops = RtAudioMap<Toluene::AudioStreamOptions>::to(options);
-    engine->openStream(&outpms, &inpms, 
+    outpms = NULL;
+    if (outparams != NULL) {
+        oup = RtAudioMap<Toluene::AudioStreamParameters>::to(*outparams);
+        outpms = &oup;
+    }
+    inpms = NULL;
+    if (inparams != NULL) {
+        inp = RtAudioMap<Toluene::AudioStreamParameters>::to(*inparams);
+        inpms = &inp;
+    }
+    strops = RtAudioMap<Toluene::AudioStreamOptions>::to(options);
+    engine->openStream(outpms, inpms, 
         RtAudioMap<Toluene::SampleType>::to(type), sampleRate, bufferSize, 
         &trampoline, &data, &strops);
         if (!engine->isStreamOpen()) {
@@ -292,16 +340,42 @@ Toluene::AudioStreamId RtAudioBackend::openStream(
         }
     activeStream = 1; // we can no say we did it!
     rtStream = std::make_unique<Toluene::AudioStream>(this, outparams, inparams, type, 
-        sampleRate, bufferSize, callback, args, options);
+        sampleRate, bufferSize, &callback, args, options);
     return 1;
 };
 
+Toluene::AudioStream& RtAudioBackend::getStream(Toluene::AudioStreamId id) {
+    if (id != 1) {
+        throw std::runtime_error("Invalid AudioStreamId for RtAudioBackend."); // this is the first time i had to use this.
+        // i really, really dont want to deal with returning an invalid reference here.
+    } else if (!activeStream) {
+        throw std::runtime_error("No streams have been started."); // same here
+    }
+    return *rtStream; // TODO: does this actually work?
+}
+
+bool RtAudioBackend::isStreamPlaying(Toluene::AudioStreamId id) {
+    if (id != 1) {
+        std::cerr << "Invalid AudioStreamId for RtAudioBackend.\n";
+        return false;
+    } else if (!activeStream) {
+        std::cerr << "No streams are open.\n";
+        return false;
+    }
+    return rtStream->started;
+}
+
 void RtAudioBackend::closeStream(Toluene::AudioStreamId id) {
-    if (!activeStream) {
+    if (id != 1) {
+        std::cerr << "Invalid AudioStreamId for RtAudioBackend.\n";
+        return;
+    } else if (!activeStream) {
         std::cerr << "No streams are open.\n";
         return;
     }
-    // TODO: also stop if playing
+    if (isStreamPlaying(id)) {
+        stopStream(id);
+    }
     engine->closeStream();
     if (engine->isStreamOpen()) {
         std::cerr << "Error: Could not close RtAudio stream. Somehow.\n";
@@ -309,6 +383,40 @@ void RtAudioBackend::closeStream(Toluene::AudioStreamId id) {
     }
     activeStream = 0;
 }
+
+void RtAudioBackend::startStream(Toluene::AudioStreamId id) {
+    if (id != 1) {
+        std::cerr << "Invalid AudioStreamId for RtAudioBackend.\n";
+        return;
+    } else if (!activeStream) {
+        std::cerr << "No streams are open.\n";
+        return;
+    }
+    if (rtStream->started == true) {
+        std::cerr << "Stream already started.\n";
+        return;
+    }
+    engine->startStream(); // TODO: gosh this is just assuming it works flawlessly, all of these are
+    rtStream->started = true;
+}
+
+void RtAudioBackend::stopStream(Toluene::AudioStreamId id) {
+    if (id != 1) {
+        std::cerr << "Invalid AudioStreamId for RtAudioBackend.\n";
+        return;
+    } else if (!activeStream) {
+        std::cerr << "No streams are open.\n";
+        return;
+    }
+    if (rtStream->started == false) {
+        std::cerr << "Stream has not been started yet.\n";
+        return;
+    }
+    engine->stopStream();
+    rtStream->started = false;
+}
+
+// rtaudiobackend stuff (constructor/deconstructor)
 
 RtAudioBackend::RtAudioBackend(Toluene::Api api) : Toluene::AudioBackend(api) {
     currentApi = api;
