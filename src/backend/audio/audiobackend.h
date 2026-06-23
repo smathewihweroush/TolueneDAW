@@ -34,68 +34,69 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 // required for basic functioning and linking of the backend.
 
 namespace Toluene {
-    enum Api {
-        UNSPECIFIED,
-        MACOSX_CORE,
-        LINUX_ALSA,
-        UNIX_JACK,
-        LINUX_PULSE,
-        LINUX_OSS,
-        WINDOWS_ASIO,
-        WINDOWS_WASAPI,
-        WINDOWS_DS,
-        DUMMY
+    enum Api { // underlying api used for doing audio stuff
+        UNSPECIFIED, // choose first which is supported
+        MACOSX_CORE, // the macosx core audio engine
+        LINUX_ALSA, // linux alsa library
+        UNIX_JACK, // unix jack system
+        LINUX_PULSE, // linux pulseaudio library
+        LINUX_OSS, // linux oss
+        WINDOWS_ASIO, // windows asio
+        WINDOWS_WASAPI, // windows wasapi
+        WINDOWS_DS, // windows directsound
+        DUMMY // nothing, no api interaction at all
     };
 
     // stupid wrapped typedef structs
 
-    typedef unsigned int SampleTypeDef;
-    const SampleTypeDef SINT8 = 1;
-    const SampleTypeDef SINT16 = 2;
-    const SampleTypeDef SINT24 = 4;
-    const SampleTypeDef SINT32 = 8;
-    const SampleTypeDef FLOAT32 = 16;
-    const SampleTypeDef FLOAT64 = 32;
-    struct SampleType {
+    typedef unsigned int SampleTypeDef; // possible types for values in an audio buffer
+    const SampleTypeDef SINT8 = 1; // signed 8-bit integer for the sample type
+    const SampleTypeDef SINT16 = 2; // signed 16-bit integer for the sample type
+    const SampleTypeDef SINT24 = 4; // signed 24-bit integer for the sample type
+    const SampleTypeDef SINT32 = 8; // signed 32-bit integer for the sample type
+    const SampleTypeDef FLOAT32 = 16; // 32-bit float value between 0.0-1.0 for the sample type
+    const SampleTypeDef FLOAT64 = 32; // 64-bit float value between 0.0-1.0 for the sample type
+    struct SampleType { // because "strict" typedefs dont exist, ive done this.
         SampleTypeDef types;
     }; // why the hell do i have to wrap this
 
-    typedef unsigned int AudioStreamOptionFlagsDef;
+    typedef unsigned int AudioStreamOptionFlagsDef; // bitmask of flags for audio stream options
     const AudioStreamOptionFlagsDef NONINTERLEAVED = 1;
     const AudioStreamOptionFlagsDef MINIMIZE_LATENCY = 2;
     const AudioStreamOptionFlagsDef HOG_DEVICE = 4;
     const AudioStreamOptionFlagsDef REALTIME_SCHEDULING = 8;
     const AudioStreamOptionFlagsDef ALSA_USE_DEFAULT = 16;
-    struct AudioStreamOptionFlags {
+    struct AudioStreamOptionFlags { // because "strict" typedefs dont exist, ive done this.
         AudioStreamOptionFlagsDef flags;
     };
 
-    typedef unsigned int AudioStreamStatusDef;
-    const AudioStreamStatusDef OK = 0;
-    const AudioStreamStatusDef INPUT_OVERFLOW = 1;
-    const AudioStreamStatusDef OUTPUT_UNDERFLOW = 2;
-    struct AudioStreamStatus {
+    typedef unsigned int AudioStreamStatusDef; // typedef for a status of an audio stream
+    const AudioStreamStatusDef OK = 0; // nothing wrong
+    const AudioStreamStatusDef INPUT_OVERFLOW = 1; // this bit is on if input overflow happens
+    const AudioStreamStatusDef OUTPUT_UNDERFLOW = 2; // this bit is on if output underflow happens
+    struct AudioStreamStatus { // because "strict" typedefs dont exist, ive done this.
         AudioStreamStatusDef status;
     };
 
+    // function pointer typedef for a callback that can be used in an audio stream
     typedef int (*AudioCallback)(void *outBuffer, void *inputBuffer, 
         unsigned int nFrames, double streamingTime, AudioStreamStatus status, void* userdata);
 
     class AudioBackend;
     class AudioDevice { // frankly this only considers rtaudio as a backend but idc that much :///
         private: // ... a bit strange. private before public, but okay.
-        AudioBackend* owner;
+        AudioBackend* owner; // audio backend which controls this device
         public:
-        std::string deviceName;
-        unsigned int deviceId;
-        unsigned int outputChannels;
-        unsigned int inputChannels;
-        unsigned int duplexChannels;
-        bool isDefaultIn;
-        bool isDefaultOut;
-        std::vector<unsigned int> supportedSampleRates;
-        unsigned int currentSampleRate;
-        unsigned int preferredSampleRate;
+        std::string deviceName; // name of the device
+        unsigned int deviceId; // actual id of the device in the underlying api
+        unsigned int outputChannels; // amount of output channels
+        unsigned int inputChannels; // amount of input channels
+        unsigned int duplexChannels; // amount of duplex channels
+        bool isDefaultIn; // bool signifying if this is the default device for providing audio input
+        bool isDefaultOut; // bool signifying if this is the default device for outputting audio
+        std::vector<unsigned int> supportedSampleRates; // vector containing all supported sample rates by the devide
+        unsigned int currentSampleRate; // current sample rate of the device
+        unsigned int preferredSampleRate; // preferred sample rate by the device
         SampleType supportedSampleTypes; // bitmask, just like in rtaudio
         unsigned int id; // id means nothing, just used to differentiate in the code.
         AudioDevice(AudioBackend*);
@@ -116,31 +117,29 @@ namespace Toluene {
         int priority;
     };
 
-    typedef unsigned int AudioStreamId;
+    typedef unsigned int AudioStreamId; // a "type" for audio stream ids
     
     class AudioStream {
         public:
-        AudioStreamId id;
-        bool started;
-        AudioStreamParameters* outparams;
-        AudioStreamParameters* inparams;
-        SampleType format;
-        unsigned int sampleRate;
-        unsigned int* bufferSize;
-        void* callback;
-        void* args;
-        AudioStreamOptions options;
+        AudioStreamId id; // used to identify each audio stream
+        bool started; // is playback active?
+        AudioStreamParameters outparams; // output channel usage information
+        AudioStreamParameters inparams; // input channel usage information
+        SampleType format; // the type the audio stream will assume for each sample
+        unsigned int sampleRate; // the sample rate of the stream
+        unsigned int bufferSize; // the amount of samples in one callback for one channel (does this change?)
+        void* callback; // a pointer to the function being used for the callback
+        void* args; // pointer to additional stuff provided graciously from an openStream function call
+        AudioStreamOptions options; // miscellaneous options for an audio stream
         AudioStream(AudioBackend* backend, 
-            AudioStreamParameters* outparams, AudioStreamParameters* inparams, SampleType format,
-            unsigned int sampleRate, unsigned int* bufferSize, void* callback, void* args, AudioStreamOptions options) : 
+            AudioStreamParameters outparams, AudioStreamParameters inparams, SampleType format,
+            unsigned int sampleRate, unsigned int bufferSize, void* callback, void* args, AudioStreamOptions options) : 
             outparams(outparams), inparams(inparams), sampleRate(sampleRate), bufferSize(bufferSize),
             callback(callback), args(args), options(options), backend(backend) {}
         AudioStream(AudioBackend* backend) : 
             backend(backend) {}
-        void startStream();
-        void stopStream();
         private:
-        AudioBackend* backend;
+        AudioBackend* backend; // audiobackend instance overseeing this stream
     };
 
     // class for backends which handle communication with api's on their own
@@ -151,11 +150,11 @@ namespace Toluene {
         // handling of api
         virtual void startApi() = 0; // start the backend communication with audio api
         static std::vector<Api> getAvailableApis(); // get api's which the backend supports
-        static std::string getApiName(Toluene::Api);
+        static std::string getApiName(Toluene::Api); // get the name of a toluene api
         virtual Api getApi() = 0; // get current api
         virtual void setApi(Api) = 0; // try to change api
         // handling of devices
-        virtual std::vector<AudioDevice*> getAudioDevices() = 0; // get a vector of all audio devices
+        virtual std::vector<AudioDevice>& getAudioDevices() = 0; // get a vector of all audio devices
         virtual std::vector<unsigned int> getAudioDeviceIds() = 0; // get a vector of all audio device ids
         virtual std::vector<std::string> getAudioDeviceNames() = 0; // get a vector of all audio device names
         virtual AudioDevice* getDefaultOutputDevice() = 0; // get the def out device for the system
@@ -176,16 +175,17 @@ namespace Toluene {
         virtual AudioStream& getStream(AudioStreamId) = 0; // i dont recommend using this, but use this if you need to get an audiostream object
         virtual bool isStreamPlaying(AudioStreamId) = 0; // is stream playback active (has startedStream())?
         virtual void startStream(AudioStreamId) = 0; // start stream playback
-        virtual void stopStream(AudioStreamId) = 0; // start stream playback
+        virtual void stopStream(AudioStreamId) = 0; // stop stream playback
         // handling of class stuff
+        AudioBackend();
         AudioBackend(Api);
         virtual ~AudioBackend() = default;
 
-        Api currentApi;
-        bool startedApi;
+        Api currentApi; // the api that is being, or will be used the next time startApi() is called
+        bool startedApi; // has the api been started?
         protected:
         std::vector<std::unique_ptr<AudioStream>> activeStreams; // unsure if i should use a vector here really...
-        std::vector<AudioDevice> devices;
+        std::vector<AudioDevice> devices; // data of all available devices
         // TODO: see if unique_ptr/shared_ptr may be better instead of pointers
     };
 }

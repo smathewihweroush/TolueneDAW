@@ -12,6 +12,7 @@ find_package(Curses)
 if (Curses_FOUND)
     add_library(Curses INTERFACE IMPORTED) # do we do this for less of a hassle?
     target_link_libraries(Curses INTERFACE "${CURSES_LIBRARIES}")
+    message("${CURSES_LIBRARIES}")
     target_include_directories(Curses INTERFACE "${CURSES_INCLUDE_DIRS}")
 endif()
 
