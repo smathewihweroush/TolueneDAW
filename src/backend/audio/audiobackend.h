@@ -21,17 +21,23 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 
 #include <string>
 #include <vector>
-#include <RtAudio.h>
+#include <memory>
 
+// TODO: this is an AudioFrontend 🥀🥀🥀
 // TODO: add error handling functionality
 // i should also probably add logging utilities or something
 // just utilities in general would be useful
 
+// this header file contains everything related to the audio backend for toluene -
 //
-// UNIVERSAL DEFINITIONS
-//
-// all the stuff that's universal, required for Linesick, or just 
-// required for basic functioning and linking of the backend.
+// the audio backend should consist of a frontend, or more specifically a class that provides everything toluene
+// may need for audio playback and audio device management. this does NOT include audio manipulation.
+// the AudioBackend class is the highlight, it's possiblty a singleton through which everything is handled.
+// it's merely abstract though, without any definitions nor dependencies, so backend implementations inheriting from
+// the AudioBackend class are required. RtAudioBackend, for example, defines all the functions, and implements them
+// mainly using the RtAudio library (rtaudio.h header).
+// Toluene should always use a pointer to an AudioDevice instance for audio, because big changes will be less
+// if all we are calling are AudioBackend functions. actual stuff is happening in a subclass instance, acting as the AudioBackend.
 
 namespace Toluene {
     enum Api { // underlying api used for doing audio stuff
@@ -71,7 +77,7 @@ namespace Toluene {
     };
 
     typedef unsigned int AudioStreamStatusDef; // typedef for a status of an audio stream
-    const AudioStreamStatusDef OK = 0; // nothing wrong
+    const AudioStreamStatusDef AUDIO_OK = 0; // nothing wrong
     const AudioStreamStatusDef INPUT_OVERFLOW = 1; // this bit is on if input overflow happens
     const AudioStreamStatusDef OUTPUT_UNDERFLOW = 2; // this bit is on if output underflow happens
     struct AudioStreamStatus { // because "strict" typedefs dont exist, ive done this.
@@ -99,7 +105,7 @@ namespace Toluene {
         unsigned int preferredSampleRate; // preferred sample rate by the device
         SampleType supportedSampleTypes; // bitmask, just like in rtaudio
         unsigned int id; // id means nothing, just used to differentiate in the code.
-        AudioDevice(AudioBackend*);
+        AudioDevice(AudioBackend* audioBackend);
     };
 
     struct AudioStreamParameters {
@@ -150,9 +156,9 @@ namespace Toluene {
         // handling of api
         virtual void startApi() = 0; // start the backend communication with audio api
         static std::vector<Api> getAvailableApis(); // get api's which the backend supports
-        static std::string getApiName(Toluene::Api); // get the name of a toluene api
+        static std::string getApiName(Toluene::Api api); // get the name of a toluene api
         virtual Api getApi() = 0; // get current api
-        virtual void setApi(Api) = 0; // try to change api
+        virtual void setApi(Api api) = 0; // try to change api
         // handling of devices
         virtual std::vector<AudioDevice>& getAudioDevices() = 0; // get a vector of all audio devices
         virtual std::vector<unsigned int> getAudioDeviceIds() = 0; // get a vector of all audio device ids
@@ -161,24 +167,24 @@ namespace Toluene {
         virtual AudioDevice* getDefaultInputDevice() = 0; // get the def out device for the system
         // handling of streams
         virtual AudioStreamId openStream( // essentially creates a start-able stream, ready to be used
-            AudioStreamParameters*, // buffer options for outgoing stream
-            AudioStreamParameters*, // buffer options for incoming stream
-            SampleType, // the type individual samples are
-            unsigned int, // the sample rate of the stream
-            unsigned int*, // wanted buffer size of the stream. may change, so thats why its a pointer.
-            AudioCallback, // the callback which updates the stream
-            void* = NULL, // user defined data
-            AudioStreamOptions = {} // special options for the stream
+            AudioStreamParameters* outputBuffer, // buffer options for outgoing stream
+            AudioStreamParameters* inputBuffer, // buffer options for incoming stream
+            SampleType type, // the type individual samples are
+            unsigned int sampleRate, // the sample rate of the stream
+            unsigned int* bufferSize, // wanted buffer size of the stream. may change, so thats why its a pointer.
+            AudioCallback callback, // the callback which updates the stream
+            void* userdata = NULL, // user defined data
+            AudioStreamOptions options = {} // special options for the stream
                                     // TODO: what should be here for the default?
         ) = 0;
-        virtual void closeStream(AudioStreamId) = 0; // delete and remove stream "safely"
-        virtual AudioStream& getStream(AudioStreamId) = 0; // i dont recommend using this, but use this if you need to get an audiostream object
-        virtual bool isStreamPlaying(AudioStreamId) = 0; // is stream playback active (has startedStream())?
-        virtual void startStream(AudioStreamId) = 0; // start stream playback
-        virtual void stopStream(AudioStreamId) = 0; // stop stream playback
+        virtual void closeStream(AudioStreamId streamId) = 0; // delete and remove stream "safely"
+        virtual AudioStream& getStream(AudioStreamId streamId) = 0; // i dont recommend using this, but use this if you need to get an audiostream object
+        virtual bool isStreamPlaying(AudioStreamId streamId) = 0; // is stream playback active (has startedStream())?
+        virtual void startStream(AudioStreamId streamId) = 0; // start stream playback
+        virtual void stopStream(AudioStreamId streamId) = 0; // stop stream playback
         // handling of class stuff
         AudioBackend();
-        AudioBackend(Api);
+        AudioBackend(Api api);
         virtual ~AudioBackend() = default;
 
         Api currentApi; // the api that is being, or will be used the next time startApi() is called
@@ -186,6 +192,5 @@ namespace Toluene {
         protected:
         std::vector<std::unique_ptr<AudioStream>> activeStreams; // unsure if i should use a vector here really...
         std::vector<AudioDevice> devices; // data of all available devices
-        // TODO: see if unique_ptr/shared_ptr may be better instead of pointers
     };
 }

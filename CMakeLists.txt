@@ -12,7 +12,6 @@ find_package(Curses)
 if (Curses_FOUND)
     add_library(Curses INTERFACE IMPORTED) # do we do this for less of a hassle?
     target_link_libraries(Curses INTERFACE "${CURSES_LIBRARIES}")
-    message("${CURSES_LIBRARIES}")
     target_include_directories(Curses INTERFACE "${CURSES_INCLUDE_DIRS}")
 endif()
 
@@ -43,3 +42,4 @@ target_sources(Toluene
 target_link_libraries(Toluene PRIVATE rtaudio)
 target_link_libraries(Toluene PRIVATE Curses)
 target_link_libraries(Toluene PRIVATE AudioBackend)
+target_link_libraries(Toluene PRIVATE TUI)

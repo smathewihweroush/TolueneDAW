@@ -20,10 +20,14 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <curses.h>
+#include <memory>
+#include <unistd.h>
+
 #include <audiobackend.h>
 #include <rtaudiobackend.h>
-#include <ncurses.h>
-#include <unistd.h>
+#include <tui.h>
+#include <ncursestui.h>
 
 using namespace std;
 using namespace Toluene;
@@ -72,7 +76,18 @@ int main(int argc, char *argv[]) {
     // }
     // bcknd->closeStream(id); // automatically also stops the stream!
 
-    
+    unique_ptr<Tui> tui = make_unique<NcursesTui>();
+    tui->initialize(true);
+    tui->addchar('t');
+    tui->addchar('e');
+    tui->addchar('x');
+    tui->addchar('t');
+    tui->addchar('!');
+    tui->addchar('!');
+    tui->addchar('!');
+    refresh();
+    getch();
+    endwin();
 
     return EXIT_SUCCESS;
 }

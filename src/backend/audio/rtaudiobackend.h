@@ -32,33 +32,33 @@ struct RtAudioMap;
 
 template<>
 struct RtAudioMap<Toluene::Api> { // for converting api types
-    static RtAudio::Api to(Toluene::Api&);
-    static Toluene::Api from(RtAudio::Api&);
+    static RtAudio::Api to(Toluene::Api& tolueneApi);
+    static Toluene::Api from(RtAudio::Api& rtaudioApi);
 };
 template<>
 struct RtAudioMap<Toluene::AudioStreamParameters> { // for converting stream paramaters structs
-    static RtAudio::StreamParameters to(Toluene::AudioStreamParameters&);
-    static Toluene::AudioStreamParameters from(RtAudio::StreamParameters&);
+    static RtAudio::StreamParameters to(Toluene::AudioStreamParameters& tolueneParams);
+    static Toluene::AudioStreamParameters from(RtAudio::StreamParameters& rtaudioParams);
 };
 template<>
 struct RtAudioMap<Toluene::AudioStreamStatus> { // for converting stream status typedefs
-    static RtAudioStreamStatus to(Toluene::AudioStreamStatus&);
-    static Toluene::AudioStreamStatus from(RtAudioStreamStatus&);
+    static RtAudioStreamStatus to(Toluene::AudioStreamStatus& tolueneStreamStatus);
+    static Toluene::AudioStreamStatus from(RtAudioStreamStatus& rtaudioStreamStatus);
 };
 template<>
 struct RtAudioMap<Toluene::AudioStreamOptionFlags> {
-    static RtAudioStreamFlags to(Toluene::AudioStreamOptionFlags&);
-    static Toluene::AudioStreamOptionFlags from(RtAudioStreamFlags&);
+    static RtAudioStreamFlags to(Toluene::AudioStreamOptionFlags& tolueneFlags);
+    static Toluene::AudioStreamOptionFlags from(RtAudioStreamFlags& rtaudioFlags);
 };
 template<>
 struct RtAudioMap<Toluene::AudioStreamOptions> {
-    static RtAudio::StreamOptions to(Toluene::AudioStreamOptions&);
-    static Toluene::AudioStreamOptions from(RtAudio::StreamOptions&);
+    static RtAudio::StreamOptions to(Toluene::AudioStreamOptions& tolueneStreamOptions);
+    static Toluene::AudioStreamOptions from(RtAudio::StreamOptions& rtaudioStreamOptions);
 };
 template<>
 struct RtAudioMap<Toluene::SampleType> {
-    static RtAudioFormat to(Toluene::SampleType&);
-    static Toluene::SampleType from(RtAudioFormat&);
+    static RtAudioFormat to(Toluene::SampleType& tolueneType);
+    static Toluene::SampleType from(RtAudioFormat& rtaudioType);
 };
 
 struct RtCallbackData {
@@ -71,9 +71,9 @@ class RtAudioBackend : public Toluene::AudioBackend {
     // handling of api
     void startApi() override;
     static std::vector<Toluene::Api> getAvailableApis();
-    static std::string getApiName(Toluene::Api);
+    static std::string getApiName(Toluene::Api api);
     Toluene::Api getApi() override;
-    void setApi(Toluene::Api) override;
+    void setApi(Toluene::Api api) override;
     // handling of devices
     std::vector<Toluene::AudioDevice>& getAudioDevices() override;
     std::vector<unsigned int> getAudioDeviceIds() override;
@@ -82,23 +82,23 @@ class RtAudioBackend : public Toluene::AudioBackend {
     Toluene::AudioDevice* getDefaultInputDevice() override; 
     // handling of streams
     Toluene::AudioStreamId openStream(
-        Toluene::AudioStreamParameters*,
-        Toluene::AudioStreamParameters*,
-        Toluene::SampleType,
-        unsigned int,
-        unsigned int*,
-        Toluene::AudioCallback,
-        void*,
-        Toluene::AudioStreamOptions
+        Toluene::AudioStreamParameters* outputBuffer,
+        Toluene::AudioStreamParameters* inputBuffer,
+        Toluene::SampleType type,
+        unsigned int sampleRate,
+        unsigned int* bufferSize,
+        Toluene::AudioCallback callback,
+        void* userdata,
+        Toluene::AudioStreamOptions options
     ) override; // this will always return 1 as the id, because there can only be one audiostream for rtaudio
-    void closeStream(Toluene::AudioStreamId) override;
-    Toluene::AudioStream& getStream(Toluene::AudioStreamId) override; // i dont recommend using this, but use this if you need to get an audiostream object
-    bool isStreamPlaying(Toluene::AudioStreamId) override; // is stream playback active (has startedStream())?
-    void startStream(Toluene::AudioStreamId) override;
-    void stopStream(Toluene::AudioStreamId) override;
+    void closeStream(Toluene::AudioStreamId streamId) override;
+    Toluene::AudioStream& getStream(Toluene::AudioStreamId streamId) override; // i dont recommend using this, but use this if you need to get an audiostream object
+    bool isStreamPlaying(Toluene::AudioStreamId streamId) override; // is stream playback active (has startedStream())?
+    void startStream(Toluene::AudioStreamId streamId) override;
+    void stopStream(Toluene::AudioStreamId streamId) override;
     // handling of class stuff
     RtAudioBackend();
-    RtAudioBackend(Toluene::Api);
+    RtAudioBackend(Toluene::Api api);
     ~RtAudioBackend() override;
     private:
     RtCallbackData data; // the data used in the trampoline for the rtaudiocallback
