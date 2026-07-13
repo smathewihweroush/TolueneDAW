@@ -27,6 +27,7 @@ namespace Toluene {
     typedef unsigned int WindowId; // an id for a window, 0 means nothing, otherwise may be an index, but no guarantees
     typedef long int Keycode; // a number representing key presses. most of the time it is the character itself
     typedef unsigned long long int MouseMask; // a bitmask with bits representing whether certain mouse events were triggered
+    typedef wchar_t wchar; // wide character for unicode
 
     
     class Tui;
@@ -36,7 +37,7 @@ namespace Toluene {
         
         WindowId id; // the id of a window instance
         int index; // the position of the window, lower index windows get drawn first (therefore being in the background)
-        bool visible; // is the window visible?
+        //bool visible; // is the window visible? // this would've been cool, but for my own sanity, let's not do this
         Tui* tui; // tui instance which controls this window 
     };
 
@@ -54,12 +55,16 @@ namespace Toluene {
     class Tui {
         public:
         // initialization
-        virtual void initialize(bool needsColor) = 0; // set up screen, main window, and any backends
+        virtual void begin(bool needsColor) = 0; // set up screen, main window, and any backends
+        virtual void stop() = 0;
         // basic writing
-        virtual void addchar(wchar_t character) = 0; // adds a single character to the main window
-        //virtual void addstr(std::wstring string) = 0; // adds a string to the main window
-        virtual void winaddchar(WindowId windowId, wchar_t character) = 0; // adds a single character to a window
-        //virtual void winaddstr(WindowId windowId, std::wstring) = 0; // adds a string to a window
+        virtual void addchar(wchar character) = 0; // adds a single character to the main window
+        virtual void addstring(std::wstring string) = 0; // adds a string to the main window
+        virtual void winaddchar(WindowId windowId, wchar character) = 0; // adds a single character to a window
+        virtual void winaddstr(WindowId windowId, std::wstring) = 0; // adds a string to a window
+        // basic reading
+        virtual InputEvent getchar(); // despite the name, this function returns an input event
+        virtual InputEvent wingetchar(WindowId windowId) = 0;
         // drawing
         virtual void drawall() = 0;
         // input

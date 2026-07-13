@@ -18,10 +18,13 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "tui.h"
+#include <bits/types/wint_t.h>
 #include <curses.h>
 #include <iostream>
 #include <ncurses.h>
 #include <ncursestui.h>
+#include <string>
+#include <sys/types.h>
 #include <utility>
 
 bool NcursesTui::hasNotStarted() {
@@ -32,7 +35,7 @@ bool NcursesTui::hasNotStarted() {
     return false;
 }
 
-void NcursesTui::initialize(bool needsColor) {
+void NcursesTui::begin(bool needsColor) {
     if (started) {
         std::cerr << "Already started Tui.\n";
         return;
@@ -52,12 +55,23 @@ void NcursesTui::initialize(bool needsColor) {
     started = true;
 }
 
+void NcursesTui::stop() {
+    endwin();
+    windowPairs.clear();
+    started = 0;
+} // TODO: stub
+
 void NcursesTui::addchar(wchar_t character) {
     if (hasNotStarted()) return;
     winaddchar(mainwin, character);
 }
 
-void NcursesTui::winaddchar(Toluene::WindowId window, wchar_t character) {
+void NcursesTui::addstring(std::wstring string) {
+    if (hasNotStarted()) return;
+    winaddstr(mainwin, string);
+}
+
+void NcursesTui::winaddchar(Toluene::WindowId window, Toluene::wchar character) {
     if (hasNotStarted()) return;
     if (window == 0) {
         std::cerr << "Given WindowId (0) doesn't point to anything, or there's a bug in the code.\n";
@@ -80,8 +94,74 @@ void NcursesTui::winaddchar(Toluene::WindowId window, wchar_t character) {
     wadd_wch(win, &ch);
 }
 
-void NcursesTui::drawall() {
+void NcursesTui::winaddstr(Toluene::WindowId window, std::wstring string) {
+    if (hasNotStarted()) return;
+    if (window == 0) {
+        std::cerr << "Given WindowId (0) doesn't point to anything, or there's a bug in the code.\n";
+        return;
+    }
+    // find the window
+    WINDOW* win = nullptr;
+    for (int i = 0; i < windowPairs.size(); i++) {
+        if (windowPairs[i].first == window) {
+            win = windowPairs[i].second;
+            break;
+        }
+    }
+    if (win == nullptr) {
+        std::cerr << "Could not find requested window.\n";
+        return;
+    }
+    waddwstr(win, string.c_str());
+}
 
+Toluene::InputEvent NcursesTui::getchar() {
+    if (hasNotStarted()) return {}; // TODO: what here?
+    return wingetchar(mainwin);
+}
+
+Toluene::InputEvent NcursesTui::wingetchar(Toluene::WindowId windowId) {
+    if (hasNotStarted()) return {};
+    if (windowId == 0) {
+        std::cerr << "Given WindowId (0) doesn't point to anything, or there's a bug in the code.\n";
+        return {};
+    }
+    // find the window
+    WINDOW* win = nullptr;
+    for (int i = 0; i < windowPairs.size(); i++) {
+        if (windowPairs[i].first == windowId) {
+            win = windowPairs[i].second;
+            break;
+        }
+    }
+    if (win == nullptr) {
+        std::cerr << "Could not find requested window.\n";
+        return {};
+    }
+    unsigned int ch;
+    int st = wget_wch(win, &ch);
+    Toluene::InputEvent inp {ch, {}, 0, 0}; // TODO: no conversion between keycode
+    if (st == KEY_CODE_YES) {
+        inp.isKeycode = 1;
+        if (st == KEY_MOUSE) {
+            inp.isMouse = 1;
+            Toluene::MouseInfo msf;
+            MEVENT mev;
+            getmouse(&mev);
+            msf.events = mev.bstate; // TODO: no conversion between bstatemkwfkwkgmjnitrejb w
+            msf.x = mev.x;
+            msf.y = mev.y;
+            inp.mouseInfo = msf;
+        }
+    } else if (st == ERR) {
+        std::cerr << "Ncurses encountered into an error.\n"; // TODO: what to do?
+        return {};
+    }
+    return inp;
+}
+
+void NcursesTui::drawall() {
+    // TODO: stub
 }
 
 NcursesTui::NcursesTui() {
@@ -91,6 +171,6 @@ NcursesTui::NcursesTui() {
 
 NcursesTui::~NcursesTui() {
     if (started == true) {
-        // TODO: stub, should stopwin and stuff
+        stop();
     }
 }

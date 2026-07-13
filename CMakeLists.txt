@@ -37,6 +37,11 @@ add_executable(Toluene)
 target_sources(Toluene
     PRIVATE
         src/app/main.cpp
+        src/app/tolueneapp.cpp
+    PUBLIC
+        FILE_SET HEADERS
+        FILES
+            src/app/tolueneapp.h
 )
 
 target_link_libraries(Toluene PRIVATE rtaudio)

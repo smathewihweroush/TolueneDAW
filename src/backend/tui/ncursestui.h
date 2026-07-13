@@ -20,16 +20,23 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include <ncurses.h>
+#include <string>
 #include <tui.h>
 #include <vector>
 
 class NcursesTui : public Toluene::Tui {
     public:
-    // initialization
-    void initialize(bool) override;
+    // starting and stopping
+    void begin(bool) override;
+    void stop() override;
     // basic writing
-    void addchar(wchar_t character) override;
-    void winaddchar(Toluene::WindowId windowId, wchar_t character) override;
+    void addchar(Toluene::wchar character) override;
+    void addstring(std::wstring string) override;
+    void winaddchar(Toluene::WindowId windowId, Toluene::wchar character) override;
+    void winaddstr(Toluene::WindowId windowId, std::wstring character) override;
+    // basic reading
+    Toluene::InputEvent getchar() override; 
+    Toluene::InputEvent wingetchar(Toluene::WindowId windowId) override;
     // drawing
     void drawall() override;
     // ncursestui

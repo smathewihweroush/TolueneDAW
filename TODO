@@ -3,7 +3,6 @@ this is a more centralized TODO list.
 Amount of exclamation marks is the priority. Pretty arbitrary but keep 3 !'s as top-priority, and 0 as very low.
 
 smathewih, learn cpp headers and sources, and cmake, and cpp, and like anything you dont even know references and pointers and templates and
-cxx stands for c cant classes :sob: :wilted_rose: :v: :im_insane:
 
 General
 - ! add logging utility
@@ -28,4 +27,7 @@ RtAudio backend
     getAudioDevices() isn't particularly fast...
 
 Tui class
+- !! add type conversion map
+- ! numerous stubs
 - ! add error handling functionality (with logging utility)
+- ! what to return/do when tui hasnt been started, but a function which needs to return a value is called?

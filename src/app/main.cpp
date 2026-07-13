@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License along with
 Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "tolueneapp.h"
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -32,20 +33,20 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 using namespace Toluene;
 
-int some = 512;
-int sound(void *out, void *in, unsigned int nFrames, double time, AudioStreamStatus stat, void* usrd) {
-    unsigned int i, j;
-    int16_t *buf = (int16_t*) out;
-    for (i = 0; i < nFrames; i++) {
-        for (j = 0; j < 2; j++) {
-            double val = (i % some) * 8;
-            val *= ((double)nFrames) / ((double)some);
-            *buf = round(val);
-            ++buf;
-        }
-    }
-    return 0;
-}
+// int some = 512;
+// int sound(void *out, void *in, unsigned int nFrames, double time, AudioStreamStatus stat, void* usrd) {
+//     unsigned int i, j;
+//     int16_t *buf = (int16_t*) out;
+//     for (i = 0; i < nFrames; i++) {
+//         for (j = 0; j < 2; j++) {
+//             double val = (i % some) * 8;
+//             val *= ((double)nFrames) / ((double)some);
+//             *buf = round(val);
+//             ++buf;
+//         }
+//     }
+//     return 0;
+// }
 
 int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "");
@@ -76,18 +77,14 @@ int main(int argc, char *argv[]) {
     // }
     // bcknd->closeStream(id); // automatically also stops the stream!
 
-    unique_ptr<Tui> tui = make_unique<NcursesTui>();
-    tui->initialize(true);
-    tui->addchar('t');
-    tui->addchar('e');
-    tui->addchar('x');
-    tui->addchar('t');
-    tui->addchar('!');
-    tui->addchar('!');
-    tui->addchar('!');
-    refresh();
-    getch();
-    endwin();
+    // unique_ptr<Tui> tui = make_unique<NcursesTui>();
+    // tui->begin(true);
+    // tui->addstring(L"čmarčiću ovo NIJE smiješno. jebem ti MATER.\n");
+    // getch();
+    // tui->stop();
 
-    return EXIT_SUCCESS;
+    // in main() we handle some really meta things, i guess, but most of the action happens in TolueneApp
+    TolueneApp app; // it's easier, and more organized to have a class with fields and its own functions.
+    app.start();
+    return app.loop();
 }
