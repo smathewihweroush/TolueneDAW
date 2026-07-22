@@ -56,8 +56,8 @@ void NcursesTui::begin(bool needsColor) {
 }
 
 void NcursesTui::stop() {
-    endwin();
     windowPairs.clear();
+    endwin();
     started = 0;
 } // TODO: stub
 

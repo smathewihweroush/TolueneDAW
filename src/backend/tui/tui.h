@@ -63,7 +63,7 @@ namespace Toluene {
         virtual void winaddchar(WindowId windowId, wchar character) = 0; // adds a single character to a window
         virtual void winaddstr(WindowId windowId, std::wstring) = 0; // adds a string to a window
         // basic reading
-        virtual InputEvent getchar(); // despite the name, this function returns an input event
+        virtual InputEvent getchar() = 0; // despite the name, this function returns an input event
         virtual InputEvent wingetchar(WindowId windowId) = 0;
         // drawing
         virtual void drawall() = 0;

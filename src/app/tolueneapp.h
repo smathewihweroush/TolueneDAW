@@ -19,6 +19,7 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "config.h"
 #include <tui.h>
 #include <audiobackend.h>
 #include <memory>
@@ -26,12 +27,18 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 class TolueneApp {
     public:
     void start(); // initialize everything, load data, prepare for stable use
-    int loop(); // main app loop, constantly waiting for input, separate thread for sound 
+    int loop(); // main app loop, constantly waiting for input, separate thread for sound
+
+    void setConfigs(); // initialize required config data
 
     TolueneApp();
     ~TolueneApp();
 
-    std::shared_ptr<Toluene::Tui> tui;
-    std::shared_ptr<Toluene::AudioBackend> audioBackend;
+    std::shared_ptr<Toluene::Tui> tui; // main tui instance used by app
+    std::shared_ptr<Toluene::AudioBackend> audioBackend; // main audio backend instance used by app
+    
+    Toluene::NamedConfig audioConfig; // configuration related to audio setup 
+    
     private:
+
 };

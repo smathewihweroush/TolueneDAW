@@ -30,6 +30,23 @@ namespace Toluene {
         bool required; // does the data have to be provided?
     };
     class NamedConfig { // config which uses primarily strings to store data
+        public:
+        // add data with a name and type. required by default.
+        void addData(std::string name, std::string type, bool required = true);
+        // add an entry for some data.
+        void addEntry(std::string dataName, std::string value);
+        // checks if theres some data
+        bool hasData(std::string name);
+        // gets the type of a data
+        std::string getType(std::string dataName);
+        // checks if theres an entry for some data
+        bool hasEntry(std::string dataName);
+        // gets the entry for some data. if no entry, return empty string.
+        std::string getEntry(std::string dataName);
+        // checks if config has all necessary data filled
+        bool satisfied();
+
+        private:
         std::vector<NamedData> datas; // all data that will be parsed in the config
         std::map<std::string, std::string> entries; // all data that is stored
     };

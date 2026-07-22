@@ -435,9 +435,11 @@ RtAudioBackend::RtAudioBackend(Toluene::Api api) : Toluene::AudioBackend(api) {
 }
 
 RtAudioBackend::~RtAudioBackend() {
-    if (engine->isStreamOpen()) {
-        if (engine->isStreamRunning()) engine->abortStream();
-        engine->closeStream();
+    if (startedApi) {
+        if (engine->isStreamOpen()) {
+            if (engine->isStreamRunning()) engine->abortStream();
+            engine->closeStream();
+        }
+        RtAudio* rts = engine.release();
     }
-    RtAudio* rts = engine.release();
 }

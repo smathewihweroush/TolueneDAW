@@ -18,6 +18,7 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "tolueneapp.h"
+
 #include <audiobackend.h>
 #include <cstdlib>
 #include <ncursestui.h>
@@ -27,13 +28,19 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 void TolueneApp::start() {
     audioBackend = std::make_shared<RtAudioBackend>(Toluene::LINUX_PULSE);
     tui = std::make_shared<NcursesTui>();
+    tui->begin(true);
+
+    setConfigs();
+}
+
+void TolueneApp::setConfigs() {
+    audioConfig.addData("defaultAudioOutDevice", "string", true);
+    audioConfig.addData("defaultAudioInDevice", "string", true);
 }
 
 int TolueneApp::loop() {
-    int sih;
-    std::cin >> sih;
-    std::cin >> sih;
-    std::cin >> sih;
+    tui->winaddstr(tui->mainwin, L"F°ne ↓nd dændy. W¶rks |n h”pes a¢d drea§s.\n");
+    tui->wingetchar(tui->mainwin);
     return EXIT_SUCCESS;
 }
 
@@ -42,5 +49,5 @@ TolueneApp::TolueneApp() {
 }
 
 TolueneApp::~TolueneApp() {
-    
+
 }
