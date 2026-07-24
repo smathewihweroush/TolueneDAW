@@ -18,11 +18,11 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "tolueneapp.h"
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
+// #include <cmath>
+// #include <cstdint>
+// #include <cstdlib>
 #include <curses.h>
-#include <memory>
+// #include <memory>
 #include <unistd.h>
 
 #include <audiobackend.h>
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     // tui->stop();
 
     // in main() we handle some really meta things, i guess, but most of the action happens in TolueneApp
-    TolueneApp app; // it's easier, and more organized to have a class with fields and its own functions.
+    TolueneApp app; // it's easier, and more organized to have a class with fields and its own functions in c++.
     app.start();
     return app.loop();
 }

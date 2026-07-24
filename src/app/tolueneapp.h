@@ -35,6 +35,7 @@ class TolueneApp {
     ~TolueneApp();
 
     std::shared_ptr<Toluene::Tui> tui; // main tui instance used by app
+    //Toluene::Window win;
     std::shared_ptr<Toluene::AudioBackend> audioBackend; // main audio backend instance used by app
     
     Toluene::NamedConfig audioConfig; // configuration related to audio setup 

@@ -21,6 +21,7 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 #include <bits/types/wint_t.h>
 #include <curses.h>
 #include <iostream>
+#include <memory>
 #include <ncurses.h>
 #include <ncursestui.h>
 #include <string>
@@ -59,7 +60,7 @@ void NcursesTui::stop() {
     windowPairs.clear();
     endwin();
     started = 0;
-} // TODO: stub
+} // TODO: stub, possibly
 
 void NcursesTui::addchar(wchar_t character) {
     if (hasNotStarted()) return;
@@ -113,6 +114,7 @@ void NcursesTui::winaddstr(Toluene::WindowId window, std::wstring string) {
         return;
     }
     waddwstr(win, string.c_str());
+    wrefresh(win); // TODO: remove this
 }
 
 Toluene::InputEvent NcursesTui::getchar() {
@@ -154,7 +156,7 @@ Toluene::InputEvent NcursesTui::wingetchar(Toluene::WindowId windowId) {
             inp.mouseInfo = msf;
         }
     } else if (st == ERR) {
-        std::cerr << "Ncurses encountered into an error.\n"; // TODO: what to do?
+        std::cerr << "Ncurses encountered an error.\n"; // TODO: what to do?
         return {};
     }
     return inp;
@@ -164,9 +166,34 @@ void NcursesTui::drawall() {
     // TODO: stub
 }
 
+Toluene::WindowId NcursesTui::addwin(Toluene::Window* holder) {
+    WINDOW* win = newwin(holder->height, holder->width, holder->y, holder->x);
+    if (win == nullptr) {
+        std::cerr << "Error: Ncurses returned nullptr for new window.\n";
+        return 0;
+    }
+    Toluene::WindowId newwinid = 0;
+    for (int i = 0; i < 1000; i++) {
+        if (used[i] == 0) {
+            newwinid = i;
+            break;
+        }
+    }
+    if (newwinid == 0) {
+        std::cerr << "Could not find an available window id for new window.\n";
+        return 0;
+    }
+    holder->id = newwinid;
+    windows.push_back(std::make_shared<Toluene::Window>(*holder));
+    windowPairs.emplace_back(newwinid, win);
+    return newwinid;
+}
+
 NcursesTui::NcursesTui() {
     started = false;
     mainwin = 0;
+    used[0] = 1;
+    used[1] = 1;
 }
 
 NcursesTui::~NcursesTui() {

@@ -17,7 +17,10 @@ You should have received a copy of the GNU General Public License along with
 Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <ncurses.h>
+
 #include "tolueneapp.h"
+#include "tui.h"
 
 #include <audiobackend.h>
 #include <cstdlib>
@@ -39,7 +42,10 @@ void TolueneApp::setConfigs() {
 }
 
 int TolueneApp::loop() {
-    tui->winaddstr(tui->mainwin, L"F°ne ↓nd dændy. W¶rks |n h”pes a¢d drea§s.\n");
+    tui->winaddstr(tui->mainwin, L"No way there is another\n");
+    Toluene::Window win(2, 2, 2, 50);
+    Toluene::WindowId id = tui->addwin(&win);
+    tui->winaddstr(id, L"This is in a separate window! it works yayayayayayya :3\n");
     tui->wingetchar(tui->mainwin);
     return EXIT_SUCCESS;
 }

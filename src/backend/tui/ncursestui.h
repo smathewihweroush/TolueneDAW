@@ -39,11 +39,18 @@ class NcursesTui : public Toluene::Tui {
     Toluene::InputEvent wingetchar(Toluene::WindowId windowId) override;
     // drawing
     void drawall() override;
+    // window manipulation
+    Toluene::WindowId addwin(Toluene::Window* holder) override;
+
     // ncursestui
     NcursesTui();
     ~NcursesTui() override;
 
     private:
     bool hasNotStarted(); // utility which warns the user if they haven't initialized the tui. returns true if has not started
+    // windowids correspond to ncurses pointers in this implementation
+    // and to track these pairs, we just use a vector of pairs
     std::vector<std::pair<Toluene::WindowId, WINDOW*>> windowPairs;
+    // window ids 0 and 1 are reserved.
+    bool used[1000]; // array used to mark which window ids are used. this does imply a limit of 998 windows, yes. 
 };

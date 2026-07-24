@@ -25,7 +25,9 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 
 namespace Toluene {
     typedef unsigned int WindowId; // an id for a window, 0 means nothing, otherwise may be an index, but no guarantees
-    typedef long int Keycode; // a number representing key presses. most of the time it is the character itself
+    // a number representing key presses. most of the time it is the character itself.
+    // other times it represents a keycode corresponding to most of the keycodes in ncurses
+    typedef long int Keycode;
     typedef unsigned long long int MouseMask; // a bitmask with bits representing whether certain mouse events were triggered
     typedef wchar_t wchar; // wide character for unicode
 
@@ -33,12 +35,23 @@ namespace Toluene {
     class Tui;
     class Window { // contains information for a window
         public:
-        void draw() {}; // function that gets called each time tui needs to draw this window
+        virtual void draw() {}; // function that gets called before this window gets drawn (updated) onto the screen
         
-        WindowId id; // the id of a window instance
-        int index; // the position of the window, lower index windows get drawn first (therefore being in the background)
-        //bool visible; // is the window visible? // this would've been cool, but for my own sanity, let's not do this
-        Tui* tui; // tui instance which controls this window 
+        WindowId id; // the toluene id of a window instance
+        int index = 0; // the "z position" of the window, lower index windows get drawn first, can be negative
+        //bool visible; // is the window visible? // this could be cool, but for my own sanity, let's not do this for now
+        Tui* tui; // tui instance which controls this window
+        int x = 0; // the x component of the position of the window on the console, in characters
+        int y = 0; // the y component of the position of the window on the console, in characters
+        int height; // the height of the window, in characters
+        int width; // the width of the window, in characters
+
+        // create a new window with width and height, at default (0, 0) position
+        Window(int height, int width) : height(height), width(width) {};
+        // create a new window at a position with width and height specified
+        Window(int x, int y, int height, int width) : x(x), y(y), height(height), width(width) {};
+        // create a new window at a position with dimensions and z index specified
+        Window(int x, int y, int height, int width, int index) : x(x), y(y), height(height), width(width), index(index) {};
     };
 
     struct MouseInfo {
@@ -63,11 +76,12 @@ namespace Toluene {
         virtual void winaddchar(WindowId windowId, wchar character) = 0; // adds a single character to a window
         virtual void winaddstr(WindowId windowId, std::wstring) = 0; // adds a string to a window
         // basic reading
-        virtual InputEvent getchar() = 0; // despite the name, this function returns an input event
-        virtual InputEvent wingetchar(WindowId windowId) = 0;
+        virtual InputEvent getchar() = 0; // despite the name, this function returns an input event handled at the mainwin
+        virtual InputEvent wingetchar(WindowId windowId) = 0; // like getchar(), but for any given window
         // drawing
         virtual void drawall() = 0;
-        // input
+        // window manipulation
+        virtual WindowId addwin(Window* holder) = 0; // adds a window
 
         // tui
         Tui() {};
