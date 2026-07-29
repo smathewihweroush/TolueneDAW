@@ -50,6 +50,7 @@ void NcursesTui::begin(bool needsColor) {
 }
 
 void NcursesTui::stop() {
+    if (hasNotStarted()) return;
     release();
     started = 0;
     mainwin = 0;
@@ -134,6 +135,7 @@ Toluene::InputEvent NcursesTui::wingetchar(Toluene::WindowId windowId) {
 }
 
 void NcursesTui::drawall() {
+    if (hasNotStarted()) return;
     std::vector<std::pair<int, Toluene::WindowId>> wins;
     wins.push_back(std::make_pair(0, mainwin)); // we casually assume the standard screen is at index 0
     for (int i = 0; i < windows.size(); i++) {
@@ -146,6 +148,7 @@ void NcursesTui::drawall() {
 }
 
 void NcursesTui::drawwin(Toluene::WindowId windowId) {
+    if (hasNotStarted()) return;
     if (windowId == 0) {
         std::cerr << "Given window id for drawing is not valid.\n";
         return;
@@ -169,6 +172,7 @@ void NcursesTui::drawwin(Toluene::WindowId windowId) {
 }
 
 Toluene::WindowId NcursesTui::addwin(Toluene::Window* holder) {
+    if (hasNotStarted()) return 0;
     WINDOW* win = newwin(holder->height, holder->width, holder->y, holder->x);
     if (win == nullptr) {
         std::cerr << "Error: Ncurses returned nullptr for new window.\n";
@@ -193,6 +197,7 @@ Toluene::WindowId NcursesTui::addwin(Toluene::Window* holder) {
 }
 
 void NcursesTui::delwin(Toluene::WindowId windowId) {
+    if (hasNotStarted()) return;
     int windex = -1;
     for (int i = 0; i < windows.size(); i++) {
         if (windows[i]->id == windowId) {
@@ -221,6 +226,7 @@ void NcursesTui::delwin(Toluene::WindowId windowId) {
 }
 
 void NcursesTui::delallw() {
+    if (hasNotStarted()) return;
     int s = 0;
     for (int i = windows.size() - 1; i >= 0; i++) {
         s = windows.size();
@@ -247,6 +253,7 @@ NcursesTui::~NcursesTui() {
 }
 
 WINDOW* NcursesTui::getncwin(Toluene::WindowId windowId) {
+    if (hasNotStarted()) return nullptr;
     WINDOW* win = nullptr;
     for (int i = 0; i < windowPairs.size(); i++) {
         if (windowPairs[i].first == windowId) {
