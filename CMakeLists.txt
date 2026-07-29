@@ -38,10 +38,12 @@ target_sources(Toluene
     PRIVATE
         src/app/main.cpp
         src/app/tolueneapp.cpp
+        src/app/windows/setupwindow.cpp
     PUBLIC
         FILE_SET HEADERS
         FILES
             src/app/tolueneapp.h
+            src/app/windows/setupwindow.h
 )
 
 target_link_libraries(Toluene PRIVATE rtaudio)

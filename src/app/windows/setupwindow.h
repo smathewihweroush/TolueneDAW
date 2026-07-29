@@ -19,27 +19,11 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "config.h"
-#include <tui.h>
-#include <audiobackend.h>
-#include <memory>
+#include "tui.h"
 
-class TolueneApp {
+class SetupWindow : public Toluene::Window {
     public:
-    void start(); // initialize everything, load data, prepare for stable use
-    int loop(); // main app loop, constantly waiting for input, separate thread for sound
+    void draw() override;
 
-    void setConfigs(); // initialize required config data
-
-    TolueneApp();
-    ~TolueneApp();
-
-    std::shared_ptr<Toluene::Tui> tui; // main tui instance used by app
-    //Toluene::Window win;
-    std::shared_ptr<Toluene::AudioBackend> audioBackend; // main audio backend instance used by app
-    
-    Toluene::NamedConfig audioConfig; // configuration related to audio setup
-    
-    private:
-
+    SetupWindow() : Toluene::Window(10, 50) {}
 };

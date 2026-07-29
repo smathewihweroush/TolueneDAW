@@ -13,6 +13,10 @@ General
 
 - one day, somebody shall make this look less like a joke
 
+App
+    TolueneApp
+    - !! were including... src/app/windows/setupwindow.h? isn't that a little bit of a long include?
+
 Backends
     Audio backend
     - ! is it okay if the default value for the AudioStreamOptions in openStream() is just {}?
@@ -28,10 +32,21 @@ Backends
         getAudioDevices() isn't particularly fast...
 
     Tui class
+    - ! to use wchar_t, or to not use wchar_t?
+    - safe pointers?
+    - window class isn't very powerful
+    - type aliases are kinda wack
+    - could a window instance for mainwin be useful? at least to avoid additional edge cases? 
+
+    NcursesTui class
+    - !!! missing functionality
     - !! add type conversion map
-    - ! numerous stubs
     - ! add error handling functionality (with logging utility)
+    - ! optimize drawall(), and possibly drawwin(). drawall is currently O(n^2) time complexity.
+    - ! optimize delwin(), and delallw().
     - ! what to return/do when tui hasnt been started, but a function which needs to return a value is called?
+    - ! in release() function, what to do if theres no window pair for the mainwin after delallw?
+
 
 Core 
     Config class

@@ -29,28 +29,51 @@ class NcursesTui : public Toluene::Tui {
     // starting and stopping
     void begin(bool) override;
     void stop() override;
+
     // basic writing
     void addchar(Toluene::wchar character) override;
     void addstring(std::wstring string) override;
     void winaddchar(Toluene::WindowId windowId, Toluene::wchar character) override;
     void winaddstr(Toluene::WindowId windowId, std::wstring character) override;
+
     // basic reading
     Toluene::InputEvent getchar() override; 
     Toluene::InputEvent wingetchar(Toluene::WindowId windowId) override;
+
     // drawing
     void drawall() override;
+    void drawwin(Toluene::WindowId windowId) override;
+
     // window manipulation
     Toluene::WindowId addwin(Toluene::Window* holder) override;
+    void delwin(Toluene::WindowId windowId) override;
+    void delallw() override;
 
     // ncursestui
     NcursesTui();
     ~NcursesTui() override;
 
+    // utility
+
+    // get ncurses window pointer from id. if not found, return nullptr
+    WINDOW* getncwin(Toluene::WindowId windowId);
+
     private:
-    bool hasNotStarted(); // utility which warns the user if they haven't initialized the tui. returns true if has not started
+    // control
+
+    void release() override;
+
+    // utility
+
+    // utility which warns the user if they haven't initialized the tui. returns true if hasn't started
+    bool hasNotStarted();
+
+    // private variables
+
     // windowids correspond to ncurses pointers in this implementation
     // and to track these pairs, we just use a vector of pairs
     std::vector<std::pair<Toluene::WindowId, WINDOW*>> windowPairs;
+    // "bitmask" array used to mark which window ids are used. this implies a limit of 998 windows.
     // window ids 0 and 1 are reserved.
-    bool used[1000]; // array used to mark which window ids are used. this does imply a limit of 998 windows, yes. 
+    bool used[1000];
 };

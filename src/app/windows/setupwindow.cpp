@@ -17,29 +17,8 @@ You should have received a copy of the GNU General Public License along with
 Toluene. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "setupwindow.h"
 
-#include "config.h"
-#include <tui.h>
-#include <audiobackend.h>
-#include <memory>
-
-class TolueneApp {
-    public:
-    void start(); // initialize everything, load data, prepare for stable use
-    int loop(); // main app loop, constantly waiting for input, separate thread for sound
-
-    void setConfigs(); // initialize required config data
-
-    TolueneApp();
-    ~TolueneApp();
-
-    std::shared_ptr<Toluene::Tui> tui; // main tui instance used by app
-    //Toluene::Window win;
-    std::shared_ptr<Toluene::AudioBackend> audioBackend; // main audio backend instance used by app
-    
-    Toluene::NamedConfig audioConfig; // configuration related to audio setup
-    
-    private:
-
-};
+void SetupWindow::draw() {
+    tui->winaddstr(id, L"TESTING!!!!");
+}

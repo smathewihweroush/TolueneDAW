@@ -19,4 +19,11 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 
 #include <tui.h>
 
-// nothing... empty...
+Toluene::Window* Toluene::WindowSafe::operator->(){
+    return p;
+}
+
+Toluene::WindowSafe::~WindowSafe() {
+    delete p;
+    p = nullptr; // this is INCREDIBLY important. it makes life EASIER. DO THIS. IF POINTERS. ARE. INVALID.
+}
