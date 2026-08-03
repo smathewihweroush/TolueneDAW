@@ -20,5 +20,7 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 #include "setupwindow.h"
 
 void SetupWindow::draw() {
-    tui->winaddstr(id, L"TESTING!!!!");
+    tui->setBox('+', '-', '+', '|', '\0', '|', '+', '-', '+');
+    tui->winMv(id, 0, 0);
+    tui->winBox(id, 0, 0, width - 1, height - 1);
 }

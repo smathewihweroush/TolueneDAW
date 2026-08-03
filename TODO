@@ -1,4 +1,4 @@
-File for TODO-ing stuff. TODO's are also put in files which contain something TODO, but
+File for logging what can be improved in the future. TODO's are also put in files which contain something TODO, but
 this is a more centralized TODO list.
 Amount of exclamation marks is the priority. Pretty arbitrary but keep 3 !'s as top-priority, and 0 as very low.
 
@@ -12,6 +12,9 @@ General
 - add cross-platform compatability DIFFICULT
 
 - one day, somebody shall make this look less like a joke
+- one day, somebody shall make documentation, and actually explain everything properly
+    and remove ambiguities...
+    and define everything...
 
 App
     TolueneApp
@@ -33,19 +36,20 @@ Backends
 
     Tui class
     - ! to use wchar_t, or to not use wchar_t?
-    - safe pointers?
+    - fix documentation ambiguities, actually the documentation sucks overall but let's ignore that
     - window class isn't very powerful
     - type aliases are kinda wack
-    - could a window instance for mainwin be useful? at least to avoid additional edge cases? 
 
     NcursesTui class
     - !!! missing functionality
     - !! add type conversion map
     - ! add error handling functionality (with logging utility)
+    - ! what to return/do when tui hasnt been started, but a function which needs to return a value is called?
     - ! optimize drawall(), and possibly drawwin(). drawall is currently O(n^2) time complexity.
     - ! optimize delwin(), and delallw().
-    - ! what to return/do when tui hasnt been started, but a function which needs to return a value is called?
-    - ! in release() function, what to do if theres no window pair for the mainwin after delallw?
+    - ! writing functions require some work 
+    - some functions could use toluene functions instead of ncurses functions
+    - remove R.I.P's
 
 
 Core 

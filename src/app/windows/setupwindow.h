@@ -26,4 +26,5 @@ class SetupWindow : public Toluene::Window {
     void draw() override;
 
     SetupWindow() : Toluene::Window(10, 50) {}
+    SetupWindow(int x, int y) : Toluene::Window(x, y, 10, 50) {}
 };

@@ -19,7 +19,7 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <curses.h>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -33,6 +33,27 @@ namespace Toluene {
     typedef unsigned long long int MouseMask;
     // wide character for unicode
     typedef wchar_t wchar;
+
+    // the available ways the tui can configure user's console to handle input from the user.
+    enum ConsoleInputMode {
+        // at the beginning the console configuration is ambiguous, so UNSET signifies that ambiguity.
+        UNSET,
+        // cooked mode buffers input until enter key is pressed
+        COOKED,
+        // unlike cooked, does not buffer, but interprets escape sequences, and allows control of 
+        // input flow with special characters. also signals something something TODO
+        CBREAK,
+        // like cbreak, but furthermore passes characters from escape sequences. signals are ignored.
+        RAW
+    };
+
+    // the available ways the tui can configure user's console echoing
+    enum EchoMode {
+        // input is echoed to mainwin
+        ECHO,
+        // input is not echoed anywhere
+        NOECHO
+    };
     
     class Tui;
     // a window class contains all information for rendering a window, as well as some useful functions
@@ -48,9 +69,9 @@ namespace Toluene {
         //bool visible; // is the window visible? // this could be cool, but for my own sanity, let's not do this for now
         // tui instance which controls this window
         Tui* tui;
-        // the x component of the position of the window on the console, in characters
+        // the x position of the window on the console, in characters
         int x = 0;
-        // the y component of the position of the window on the console, in characters
+        // the y position of the window on the console, in characters
         int y = 0;
         // the height of the window, in characters
         int height;
@@ -59,10 +80,15 @@ namespace Toluene {
 
         // create a new window with width and height, at default (0, 0) position
         Window(int height, int width) : height(height), width(width) {};
-        // create a new window at a position with width and height specified
-        Window(int x, int y, int height, int width) : x(x), y(y), height(height), width(width) {};
-        // create a new window at a position with dimensions and z index specified
-        Window(int x, int y, int height, int width, int index) : x(x), y(y), height(height), width(width), index(index) {};
+        // create a new window at a position with width and height specified, as well as an optional index
+        Window(int x, int y, int height, int width, int index = 0) : x(x), y(y), height(height), width(width), index(index) {};
+    };
+
+    // the class of the mainwin
+    class MainWindow : public Window {
+        public:
+        // empty because it's equivalent to a regular window for now
+        MainWindow() : Window(0, 0) {}; // just need a constructor
     };
 
     // struct for info provided on a mouse event
@@ -85,25 +111,14 @@ namespace Toluene {
             : keycode(kc), mouseInfo(mi), isKeycode(ik), isMouse(im), valid(v) {}
     };
 
-    // a class which contains a pointer to a dynamically allocated window, and deletes it when destructed.
-    // please don't delete the pointer manually.  
-    class WindowSafe {
-        public:
-        // contained pointer to dynamically allocated window
-        Window* p;
-        // utility operator to allow similar access like a pointer
-        Window* operator->();
-        // constructor
-        WindowSafe(Window* ptr) : p(ptr) {}
-        // destructor, should also delete pointer
-        ~WindowSafe();
-    };
+    // R.I.P. WindowSafe class, i had doubts in you anyaways so idc
 
     // an entirely opaque, implementation-defined abstract class which serves as the interface for making tui.
     // contains merely the required utilities, derived classes may have more functionality, but what they add shall
     // not be used publicly (except for debugging purposes) if implementations are to be interchangable.
     class Tui {
-        public:
+            public: //          ---- public stuff ----
+        
         // control
 
         // set up screen, main window, and any backends
@@ -111,59 +126,122 @@ namespace Toluene {
         // delete windows, and stop underlying backends
         virtual void stop() = 0;
 
+        // input behavior control
+
+        // try to set console input mode
+        virtual void setMode(ConsoleInputMode mode) = 0;
+        // try to get current console input mode
+        virtual ConsoleInputMode getMode() = 0;
+        // try to set echo mode
+        virtual void setEcho(EchoMode mode) = 0;
+        // try to get curretn echo mode
+        virtual EchoMode getEcho() = 0;
+
         // basic writing
 
         // adds a single character to the main window
-        virtual void addchar(wchar character) = 0;
+        virtual void addChar(wchar character) = 0;
         // adds a string to the main window
-        virtual void addstring(std::wstring string) = 0;
+        virtual void addString(std::wstring string) = 0;
         // adds a single character to a window
-        virtual void winaddchar(WindowId windowId, wchar character) = 0;
+        virtual void winAddChar(WindowId windowId, wchar character) = 0;
         // adds a string to a window
-        virtual void winaddstr(WindowId windowId, std::wstring) = 0;
+        virtual void winAddStr(WindowId windowId, std::wstring) = 0;
+
+        // adds a horizontal line of character ch with specified length n to the mainwin
+        virtual void hLine(wchar ch, int n) = 0;
+        // adds a vertical line of character ch with specified length n to the mainwin
+        virtual void vLine(wchar ch, int n) = 0;
+        // adds a horizontal line of character ch with specified length n to a window
+        virtual void winHLine(WindowId windowId, wchar ch, int n) = 0;
+        // adds a vertical line of character ch with specified length n to a window
+        virtual void winVLine(WindowId windowId, wchar ch, int n) = 0;
+        // fills a rectangular area with a single character on the mainwin
+        virtual void fill(wchar ch, int w, int h) = 0;
+        // fills a rectangular area with a single character on a window
+        virtual void winFill(WindowId windowId, wchar ch, int w, int h) = 0;
+        
+        // sets characters to use for the bordered box in box() and winBox()
+        // if a character is null, it will not draw anything
+        // tl = top-left, tm = top-middle, tr = top-right
+        // cl = center-left, cm = center-middle, cr = center-right
+        // bl = bottom-left, bm = bottom-middle, br = bottom-right
+        virtual void setBox(wchar tl, wchar tm, wchar tr, wchar cl, wchar cm, wchar cr, wchar bl, wchar bm, wchar br) = 0;
+        // adds a bordered box to the main window
+        // (x1, y1) is the position of the top-left corner, (x2, y2) of the bottom-right corner
+        virtual void box(int x1, int y1, int x2, int y2) = 0;
+        // adds a bordered box to a window, uses border characters set by setBrd
+        // (x1, y1) is the position of the top-left corner, (x2, y2) of the bottom-right corner
+        virtual void winBox(WindowId windowId, int x1, int y1, int x2, int y2) = 0;
 
         // basic reading
 
         // despite the name, this function returns an input event handled at the mainwin
-        virtual InputEvent getchar() = 0; 
+        virtual InputEvent getChar() = 0; 
         // like getchar(), but for any given window
-        virtual InputEvent wingetchar(WindowId windowId) = 0;
+        virtual InputEvent winGetChar(WindowId windowId) = 0;
 
         // basic drawing
 
         // this is the main function recommended for drawing. draws all windows in the correct order.
-        virtual void drawall() = 0;
-        virtual void drawwin(WindowId windowId) = 0;
+        virtual void drawAll() = 0;
+        // this draws a single window. not in order.
+        virtual void drawWin(WindowId windowId) = 0;
+
         // window manipulation
+
         // add a dynamically allocated window for the tui to handle.
-        virtual WindowId addwin(Window* holder) = 0;
+        virtual WindowId addWin(std::shared_ptr<Window> holder) = 0;
         // safely delete a dynamically allocated window.
-        virtual void delwin(WindowId windowId) = 0;
+        virtual void delWin(WindowId windowId) = 0;
         // safely delete all windows, not including the main window which is always existent.
-        virtual void delallw() = 0;
+        virtual void delAllW() = 0;
+        // move mainwin's cursor.
+        virtual void mv(int x, int y) = 0;
+        // move a window's cursor
+        virtual void winMv(WindowId windowId, int x, int y) = 0; 
+
+        // utility
+
+        // get toluene window pointer from id. if not found, return nullptr
+        virtual Window* getTolWin(Toluene::WindowId windowId) = 0;
 
         // tui
 
+        // constructor of the tui, excepts to default everything, but not start anything yet.
         Tui() {};
+        // destructor of the tui, excepts to release everything (free handled memory), and stop any backends.
         virtual ~Tui() {};
 
         // public variables
 
         // is the tui active?
         bool started;
-        // the id of the main window which is always existent and equal to 1 if tui is active, 0 otherwise
-        WindowId mainwin;
+        // the id of the main window which should always be existent, is specially handled, and is 0 if tui is inactive
+        WindowId mainWin;
+        // all the various characters used by the bordered box in certain functions. check setBrd().
+        wchar tl = '\0', tm = '\0', tr = '\0', cl = '\0', cm = '\0', cr = '\0', bl = '\0', bm = '\0', br = '\0';
 
-        protected:
+            protected: //       ---- private stuff ----
+
         // control
 
         // safely release everything this tui instance controls, like windows, and anything the backend handles. call in stop().
         virtual void release() = 0;
 
+        // window manipulation
+
+        // either add or update mainwin to match the main window (if one exists) in any backend from an implementation
+        virtual void queryMainWin() = 0;
+
         // protected variables
 
         // vector containing pointers to dynamically allocated windows.
-        std::vector<WindowSafe> windows;
+        std::vector<std::shared_ptr<Window>> windows;
+        // tui's current console input mode
+        ConsoleInputMode inputMode;
+        // tui's current echo mode
+        EchoMode echoMode = ECHO;
     };
 }
 

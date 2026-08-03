@@ -19,7 +19,7 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 
 #include "tolueneapp.h"
 
-#include <new>
+#include <curses.h>
 #include <src/app/windows/setupwindow.h> // TODO: HOLY messy
 #include <tui.h>
 #include <audiobackend.h>
@@ -28,16 +28,18 @@ Toluene. If not, see <https://www.gnu.org/licenses/>.
 #include <rtaudiobackend.h>
 #include <memory>
 
+using namespace std;
+using namespace Toluene;
+
 void TolueneApp::start() {
-    audioBackend = std::make_shared<RtAudioBackend>(Toluene::LINUX_PULSE);
+    audioBackend = std::make_shared<RtAudioBackend>(LINUX_PULSE);
     tui = std::make_shared<NcursesTui>();
     tui->begin(true);
+    tui->setMode(CBREAK);
 
     setConfigs();
-    SetupWindow* setup = new SetupWindow();
-    setup->x = 5;
-    setup->y = 5;
-    tui->addwin(setup);
+    shared_ptr<SetupWindow> stpwndw = std::make_shared<SetupWindow>(1, 1);
+    tui->addWin(std::move(stpwndw));
 }
 
 void TolueneApp::setConfigs() {
@@ -47,9 +49,10 @@ void TolueneApp::setConfigs() {
 
 int TolueneApp::loop() {
     timeout(500);
+    tui->setEcho(NOECHO);
     for (int i = 0; i < 100; i++) {
-        tui->drawall();
-        tui->getchar();
+        tui->drawAll();
+        tui->getChar();
     }
     return EXIT_SUCCESS;
 }
@@ -59,5 +62,5 @@ TolueneApp::TolueneApp() {
 }
 
 TolueneApp::~TolueneApp() {
-    //std::cout << jk->id << '\n';
+
 }
